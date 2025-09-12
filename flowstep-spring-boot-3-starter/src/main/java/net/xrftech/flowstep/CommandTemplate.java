@@ -51,7 +51,7 @@ public abstract class CommandTemplate<C, R> {
         
         try {
             // 1. Validate command (use default implementation or subclass override)
-            StepResult<Void> validateResult = validate(command);
+            var validateResult = validate(command);
             if (!validateResult.isSuccess()) {
                 log.warn("Command validation failed: {}", validateResult.getMessage());
                 throw new BusinessException(
@@ -62,7 +62,7 @@ public abstract class CommandTemplate<C, R> {
             }
             
             // 2. Create and initialize context with audit information
-            CommandContext context = new CommandContext();
+            var context = new CommandContext();
             context.setCommand(command);
             context.setTimestamp(LocalDateTime.now());
             context.markStartTime();
@@ -71,15 +71,15 @@ public abstract class CommandTemplate<C, R> {
             initializeContext(context, command);
             
             // 3. Execute all steps in sequence
-            List<CommandStep<?>> stepList = steps(command, context);
+            var stepList = steps(command, context);
             log.debug("Executing {} command steps", stepList.size());
             
-            for (int i = 0; i < stepList.size(); i++) {
-                CommandStep<?> step = stepList.get(i);
+            for (var i = 0; i < stepList.size(); i++) {
+                var step = stepList.get(i);
                 log.debug("Executing command step {}: {}", i + 1, step.getClass().getSimpleName());
                 
                 @SuppressWarnings("unchecked")
-                StepResult<Object> stepResult = ((CommandStep<Object>) step).execute(context);
+                var stepResult = ((CommandStep<Object>) step).execute(context);
                 
                 if (!stepResult.isSuccess()) {
                     log.warn("Command step {} failed: {}", i + 1, stepResult.getMessage());
@@ -94,7 +94,7 @@ public abstract class CommandTemplate<C, R> {
             }
             
             // 4. Build response
-            R response = buildResponse(context);
+            var response = buildResponse(context);
             
             // 5. Handle post-execution tasks (events, notifications, etc.)
             handlePostExecution(context);
@@ -181,7 +181,7 @@ public abstract class CommandTemplate<C, R> {
      * @param context the command context containing events and audit info
      */
     protected void handlePostExecution(CommandContext context) {
-        List<Object> events = context.getEvents();
+        var events = context.getEvents();
         if (!events.isEmpty()) {
             log.debug("Command generated {} events for publishing", events.size());
             // Subclasses should override to actually publish events

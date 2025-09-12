@@ -36,10 +36,10 @@ class QueryTemplateTest {
         when(mockStep2.execute(any(QueryContext.class)))
                 .thenReturn(StepResult.success("step2-result"));
 
-        TestRequest request = new TestRequest("test-data");
+        var request = new TestRequest("test-data");
 
         // When
-        String response = queryService.execute(request);
+        var response = queryService.execute(request);
 
         // Then
         assertThat(response).isEqualTo("processed: test-data");
@@ -48,7 +48,7 @@ class QueryTemplateTest {
     @Test
     void shouldThrowBusinessExceptionWhenValidationFails() {
         // Given
-        TestRequest invalidRequest = new TestRequest(""); // Empty data should fail validation
+        var invalidRequest = new TestRequest(""); // Empty data should fail validation
 
         // When/Then
         assertThatThrownBy(() -> queryService.execute(invalidRequest))
@@ -62,7 +62,7 @@ class QueryTemplateTest {
         when(mockStep1.execute(any(QueryContext.class)))
                 .thenReturn(StepResult.failure("Step failed", "STEP_ERROR", ErrorType.BUSINESS));
 
-        TestRequest request = new TestRequest("test-data");
+        var request = new TestRequest("test-data");
 
         // When/Then
         assertThatThrownBy(() -> queryService.execute(request))
@@ -76,7 +76,7 @@ class QueryTemplateTest {
         when(mockStep1.execute(any(QueryContext.class)))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
-        TestRequest request = new TestRequest("test-data");
+        var request = new TestRequest("test-data");
 
         // When/Then
         assertThatThrownBy(() -> queryService.execute(request))
@@ -84,16 +84,31 @@ class QueryTemplateTest {
                 .hasMessage("System error during query");
     }
 
-    // Test implementation classes
-    private static class TestRequest {
-        private final String data;
-
-        TestRequest(String data) {
-            this.data = data;
+    // Test implementation classes using modern Java features
+    
+    /**
+     * Test request record demonstrating immutable request objects
+     * with built-in validation and modern Java syntax.
+     */
+    private record TestRequest(String data) {
+        public TestRequest {
+            // Compact constructor with validation
+            if (data == null) {
+                throw new IllegalArgumentException("Data cannot be null");
+            }
         }
-
-        public String getData() {
-            return data;
+        
+        public boolean isValid() {
+            return !data.trim().isEmpty();
+        }
+    }
+    
+    /**
+     * Test response record for query results
+     */
+    private record TestResponse(String result, long processingTimeMs) {
+        public static TestResponse of(String result) {
+            return new TestResponse(result, System.currentTimeMillis());
         }
     }
 
@@ -101,10 +116,9 @@ class QueryTemplateTest {
 
         @Override
         protected StepResult<Void> validate(TestRequest request) {
-            if (request.getData() == null || request.getData().trim().isEmpty()) {
-                return StepResult.failure("Request data cannot be empty", "VALIDATION_ERROR", ErrorType.VALIDATION);
-            }
-            return StepResult.success();
+            return request.isValid()
+                ? StepResult.success()
+                : StepResult.failure("Request data cannot be empty", "VALIDATION_ERROR", ErrorType.VALIDATION);
         }
 
         @Override
@@ -114,7 +128,8 @@ class QueryTemplateTest {
 
         @Override
         protected String buildResponse(QueryContext context) {
-            return "processed: " + context.<TestRequest>get("request").getData();
+            var request = context.<TestRequest>getRequest();
+            return "processed: " + request.data();
         }
     }
 }

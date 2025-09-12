@@ -36,10 +36,10 @@ class CommandTemplateTest {
         when(mockStep2.execute(any(CommandContext.class)))
                 .thenReturn(StepResult.success("step2-result"));
 
-        TestCommand command = new TestCommand("test-command");
+        var command = new TestCommand("test-command");
 
         // When
-        String response = commandService.execute(command);
+        var response = commandService.execute(command);
 
         // Then
         assertThat(response).isEqualTo("executed: test-command");
@@ -48,7 +48,7 @@ class CommandTemplateTest {
     @Test
     void shouldThrowBusinessExceptionWhenValidationFails() {
         // Given
-        TestCommand invalidCommand = new TestCommand(""); // Empty action should fail validation
+        var invalidCommand = new TestCommand(""); // Empty action should fail validation
 
         // When/Then
         assertThatThrownBy(() -> commandService.execute(invalidCommand))
@@ -62,7 +62,7 @@ class CommandTemplateTest {
         when(mockStep1.execute(any(CommandContext.class)))
                 .thenReturn(StepResult.failure("Step failed", "STEP_ERROR", ErrorType.BUSINESS));
 
-        TestCommand command = new TestCommand("test-command");
+        var command = new TestCommand("test-command");
 
         // When/Then
         assertThatThrownBy(() -> commandService.execute(command))
@@ -76,7 +76,7 @@ class CommandTemplateTest {
         when(mockStep1.execute(any(CommandContext.class)))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
-        TestCommand command = new TestCommand("test-command");
+        var command = new TestCommand("test-command");
 
         // When/Then
         assertThatThrownBy(() -> commandService.execute(command))
@@ -84,16 +84,22 @@ class CommandTemplateTest {
                 .hasMessage("System error during command");
     }
 
-    // Test implementation classes
-    private static class TestCommand {
-        private final String action;
-
-        TestCommand(String action) {
-            this.action = action;
+    // Test implementation classes using modern Java features
+    
+    /**
+     * Test command record demonstrating immutable command objects
+     * with built-in validation and modern Java syntax.
+     */
+    private record TestCommand(String action) {
+        public TestCommand {
+            // Compact constructor with validation
+            if (action == null) {
+                throw new IllegalArgumentException("Action cannot be null");
+            }
         }
-
-        public String getAction() {
-            return action;
+        
+        public boolean isValid() {
+            return !action.trim().isEmpty();
         }
     }
 
@@ -101,10 +107,9 @@ class CommandTemplateTest {
 
         @Override
         protected StepResult<Void> validate(TestCommand command) {
-            if (command.getAction() == null || command.getAction().trim().isEmpty()) {
-                return StepResult.failure("Command action cannot be empty", "VALIDATION_ERROR", ErrorType.VALIDATION);
-            }
-            return StepResult.success();
+            return command.isValid()
+                ? StepResult.success()
+                : StepResult.failure("Command action cannot be empty", "VALIDATION_ERROR", ErrorType.VALIDATION);
         }
 
         @Override
@@ -114,7 +119,8 @@ class CommandTemplateTest {
 
         @Override
         protected String buildResponse(CommandContext context) {
-            return "executed: " + context.<TestCommand>getCommand().getAction();
+            var command = context.<TestCommand>getCommand();
+            return "executed: " + command.action();
         }
     }
 }

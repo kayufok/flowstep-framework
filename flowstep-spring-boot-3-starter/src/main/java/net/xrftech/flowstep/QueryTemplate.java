@@ -47,7 +47,7 @@ public abstract class QueryTemplate<R, S> {
         
         try {
             // 1. Validate request (use default implementation or subclass override)
-            StepResult<Void> validateResult = validate(request);
+            var validateResult = validate(request);
             if (!validateResult.isSuccess()) {
                 log.warn("Query validation failed: {}", validateResult.getMessage());
                 throw new BusinessException(
@@ -58,20 +58,20 @@ public abstract class QueryTemplate<R, S> {
             }
             
             // 2. Create and initialize context
-            QueryContext context = new QueryContext();
+            var context = new QueryContext();
             context.setRequest(request);
             context.markStartTime();
             
             // 3. Execute all steps in sequence
-            List<QueryStep<?>> stepList = steps(request, context);
+            var stepList = steps(request, context);
             log.debug("Executing {} query steps", stepList.size());
             
-            for (int i = 0; i < stepList.size(); i++) {
-                QueryStep<?> step = stepList.get(i);
+            for (var i = 0; i < stepList.size(); i++) {
+                var step = stepList.get(i);
                 log.debug("Executing query step {}: {}", i + 1, step.getClass().getSimpleName());
                 
                 @SuppressWarnings("unchecked")
-                StepResult<Object> stepResult = ((QueryStep<Object>) step).execute(context);
+                var stepResult = ((QueryStep<Object>) step).execute(context);
                 
                 if (!stepResult.isSuccess()) {
                     log.warn("Query step {} failed: {}", i + 1, stepResult.getMessage());
@@ -86,7 +86,7 @@ public abstract class QueryTemplate<R, S> {
             }
             
             // 4. Build and return response
-            S response = buildResponse(context);
+            var response = buildResponse(context);
             log.debug("Query execution completed successfully in {}ms", 
                      context.getExecutionDuration());
             
