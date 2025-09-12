@@ -43,4 +43,4 @@ web-bundles/
 # Ignore local configuration files
 **/application-local.yml
 
-/docs/
+# /docs/ - Documentation is now tracked
