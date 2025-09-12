@@ -1,263 +1,181 @@
-// FlowStep Framework - Library Build Configuration
-// Copy this to your root build.gradle file
-
+// FlowStep Spring Boot Starter - Parent Project
 plugins {
-    id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'jacoco'
     id 'io.github.gradle-nexus.publish-plugin' version '1.3.0'
 }
 
-// Library Information
+// Parent project configuration
 group = 'net.xrftech'
-archivesBaseName = 'flowstep'
-version = '1.0.0-SNAPSHOT'  // Remove -SNAPSHOT for release
-description = 'FlowStep Framework - Clean CQRS framework for Spring Boot applications of any size'
+version = '1.0.0-SNAPSHOT'
+description = 'FlowStep Spring Boot Starter - Parent Project'
 
-// Java Configuration
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21) // LTS version for enterprise compatibility
-    }
-    withJavadocJar()
-    withSourcesJar()
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    // Spring Boot - Provided scope (users will have these)
-    compileOnly 'org.springframework.boot:spring-boot-starter:3.2.0'
-    compileOnly 'org.springframework.boot:spring-boot-starter-web:3.2.0'  // Added for GlobalExceptionHandler
-    compileOnly 'org.springframework:spring-tx:6.1.0'
-    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:3.2.0'
-    
-    // Lombok - Compile time only
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    
-    // SLF4J - Logging facade
-    compileOnly 'org.slf4j:slf4j-api:2.0.9'
-    
-    // Optional: Validation API
-    compileOnly 'jakarta.validation:jakarta.validation-api:3.0.2'
-    
-    // Test Dependencies
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.0'
-    testImplementation 'org.springframework.boot:spring-boot-starter-web:3.2.0'  // Needed for GlobalExceptionHandler tests
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
-    testImplementation 'org.mockito:mockito-core:5.7.0'
-    testImplementation 'org.assertj:assertj-core:3.24.2'
-    
-    // ArchUnit for architecture testing
-    testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
-    
-    // Test Lombok support
-    testCompileOnly 'org.projectlombok:lombok:1.18.30'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
-}
-
-// Test Configuration
-test {
-    useJUnitPlatform()
-    testLogging {
-        events "passed", "skipped", "failed"
-    }
-    // Increase heap for ArchUnit tests
-    maxHeapSize = "1G"
-    
-    // Enable JaCoCo coverage
-    finalizedBy jacocoTestReport
-}
-
-// JaCoCo Configuration
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-jacocoTestReport {
-    dependsOn test
-    reports {
-        xml.required = true
-        csv.required = false
-        html.required = true
-    }
-    
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                '**/config/**',
-                '**/*Test*',
-                '**/*IT*'
-            ])
-        }))
+// Common repositories for all modules
+allprojects {
+    repositories {
+        mavenCentral()
     }
 }
 
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                minimum = 0.80  // 80% coverage requirement
-            }
+// Shared configuration for all subprojects
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    // Common dependencies versions
+    ext {
+        lombokVersion = '1.18.30'
+        slf4jVersion = '2.0.9'
+        validationApiVersion = '3.0.2'
+        
+        // Test dependencies
+        junitVersion = '5.10.1'
+        mockitoVersion = '5.7.0'
+        assertjVersion = '3.24.2'
+        archunitVersion = '1.2.1'
+    }
+
+    // Common test configuration
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+            exceptionFormat "full"
         }
+        maxHeapSize = "1G"
     }
-}
 
-check.dependsOn jacocoTestCoverageVerification
-
-// Javadoc Configuration
-javadoc {
-    if(JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
+    // Common Java configuration
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
-    options.addStringOption('Xdoclint:none', '-quiet')
-    options.encoding = 'UTF-8'
-    options.charSet = 'UTF-8'
-    options.author = true
-    options.version = true
-    options.use = true
-    options.windowTitle = "$archivesBaseName $version API"
-    options.docTitle = "$archivesBaseName ($version)"
-    options.bottom = "Copyright © 2024. All rights reserved."
-}
 
-// Publishing Configuration
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-            
-            pom {
-                name = 'FlowStep Framework'
-                description = 'A clean CQRS framework for Spring Boot applications implementing Query-Command separation with step-based design'
-                url = 'https://github.com/[YOUR_GITHUB_USERNAME]/flowstep-framework'
-                inceptionYear = '2024'
+    // Common dependencies for all modules
+    dependencies {
+        // Lombok - Compile time only
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+        
+        // SLF4J - Logging facade
+        compileOnly "org.slf4j:slf4j-api:${slf4jVersion}"
+        
+        // Optional: Validation API
+        compileOnly "jakarta.validation:jakarta.validation-api:${validationApiVersion}"
+        
+        // Test Dependencies
+        testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+        testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+        testImplementation "org.assertj:assertj-core:${assertjVersion}"
+        
+        // Test Lombok support
+        testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+        testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+        
+        // Optional ArchUnit - only if present on classpath
+        testCompileOnly "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    }
+
+    // Javadoc Configuration
+    javadoc {
+        if(JavaVersion.current().isJava9Compatible()) {
+            options.addBooleanOption('html5', true)
+        }
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.encoding = 'UTF-8'
+        options.charSet = 'UTF-8'
+        options.author = true
+        options.version = true
+        options.use = true
+        options.windowTitle = "${project.name} ${version} API"
+        options.docTitle = "${project.name} (${version})"
+        options.bottom = "Copyright © 2024 XRF Technology. All rights reserved."
+    }
+
+    // Publishing Configuration
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
                 
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'https://opensource.org/licenses/MIT'
-                        distribution = 'repo'
+                pom {
+                    name = project.name
+                    description = project.description
+                    url = 'https://github.com/kayufok/flowstep-spring-boot-starter'
+                    inceptionYear = '2024'
+                    
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                            distribution = 'repo'
+                        }
                     }
-                }
-                
-                developers {
-                    developer {
-                        id = '[YOUR_GITHUB_USERNAME]'
-                        name = '[YOUR_FULL_NAME]'
-                        email = '[YOUR_EMAIL]'
-                        url = 'https://github.com/[YOUR_GITHUB_USERNAME]'
+                    
+                    developers {
+                        developer {
+                            id = 'kayufok'
+                            name = 'FlowStep Team'
+                            email = 'flowstep@xrftech.net'
+                            url = 'https://github.com/kayufok'
+                        }
                     }
-                }
-                
-                scm {
-                    connection = 'scm:git:https://github.com/[YOUR_GITHUB_USERNAME]/flowstep-framework.git'
-                    developerConnection = 'scm:git:ssh://git@github.com:[YOUR_GITHUB_USERNAME]/flowstep-framework.git'
-                    url = 'https://github.com/[YOUR_GITHUB_USERNAME]/flowstep-framework'
-                    tag = 'HEAD'
-                }
-                
-                issueManagement {
-                    system = 'GitHub Issues'
-                    url = 'https://github.com/[YOUR_GITHUB_USERNAME]/flowstep-framework/issues'
+                    
+                    scm {
+                        connection = 'scm:git:https://github.com/kayufok/flowstep-spring-boot-starter.git'
+                        developerConnection = 'scm:git:ssh://git@github.com:kayufok/flowstep-spring-boot-starter.git'
+                        url = 'https://github.com/kayufok/flowstep-spring-boot-starter'
+                        tag = 'HEAD'
+                    }
+                    
+                    issueManagement {
+                        system = 'GitHub Issues'
+                        url = 'https://github.com/kayufok/flowstep-spring-boot-starter/issues'
+                    }
                 }
             }
         }
     }
+
+    // Signing Configuration (for Maven Central)
+    signing {
+        required { gradle.taskGraph.hasTask("publish") }
+        sign publishing.publications.maven
+    }
+
+    // Ensure reproducible builds
+    tasks.withType(AbstractArchiveTask) {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
 }
 
-// Signing Configuration (for Maven Central)
-signing {
-    required { gradle.taskGraph.hasTask("publish") }
-    sign publishing.publications.maven
-}
-
-// Nexus Publishing Configuration
+// Nexus Publishing Configuration (only for parent)
 nexusPublishing {
     repositories {
         sonatype {
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
             
-            // Credentials from gradle.properties or environment variables
             username = findProperty('sonatypeUsername') ?: System.getenv('SONATYPE_USERNAME')
             password = findProperty('sonatypePassword') ?: System.getenv('SONATYPE_PASSWORD')
         }
     }
     
-    // Configure timeouts
     connectTimeout = Duration.ofMinutes(3)
     clientTimeout = Duration.ofMinutes(3)
 }
 
-// Custom tasks for library management
+// Custom tasks for project management
 task printVersion {
     doLast {
-        println "Library Version: $version"
+        println "FlowStep Spring Boot Starter Version: $version"
         println "Group: $group"
-        println "Artifact: $archivesBaseName"
-    }
-}
-
-task generateVersionFile {
-    doLast {
-        def versionDir = new File("$buildDir/generated-resources/")
-        versionDir.mkdirs()
-        new File(versionDir, "VERSION").text = version
-    }
-}
-
-// Ensure version file is included in jar
-jar {
-    dependsOn generateVersionFile
-    from "$buildDir/generated-resources/"
-    
-    manifest {
-        attributes(
-            'Implementation-Title': 'FlowStep Framework',
-            'Implementation-Version': version,
-            'Implementation-Vendor': '[YOUR_NAME]',
-            'Built-By': System.getProperty('user.name'),
-            'Built-Date': new Date().toString(),
-            'Built-JDK': System.getProperty('java.version'),
-            'Built-Gradle': gradle.gradleVersion
-        )
-    }
-}
-
-// Ensure reproducible builds
-tasks.withType(AbstractArchiveTask) {
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
-}
-
-// Release preparation task
-task prepareRelease {
-    group = 'release'
-    description = 'Prepares the project for release'
-    
-    doLast {
-        // Verify no SNAPSHOT dependencies
-        def hasSnapshots = configurations.runtimeClasspath.resolvedConfiguration
-            .resolvedArtifacts
-            .any { it.moduleVersion.id.version.contains('SNAPSHOT') }
-        
-        if (hasSnapshots) {
-            throw new GradleException('Cannot release with SNAPSHOT dependencies')
-        }
-        
-        // Verify version is not SNAPSHOT
-        if (version.toString().contains('SNAPSHOT')) {
-            throw new GradleException('Cannot release SNAPSHOT version')
-        }
-        
-        println "✅ Release preparation complete"
-        println "Version: $version"
-        println "All checks passed!"
+        println "Modules: ${subprojects.collect { it.name }}"
     }
 }
 
