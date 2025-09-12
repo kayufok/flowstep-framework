@@ -1,0 +1,3 @@
+# FlowStep Spring Boot 2 Auto Configuration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+net.xrftech.flowstep.config.FlowStepAutoConfiguration

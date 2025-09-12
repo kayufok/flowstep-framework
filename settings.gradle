@@ -1,1 +1,4 @@
-rootProject.name = 'demo'
+rootProject.name = 'flowstep-spring-boot-starter'
+
+include 'flowstep-spring-boot-2-starter'
+include 'flowstep-spring-boot-3-starter'

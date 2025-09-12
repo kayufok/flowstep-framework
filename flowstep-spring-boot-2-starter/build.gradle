@@ -1,0 +1,72 @@
+// FlowStep Spring Boot 2 Starter - Java 8+ Support
+description = 'FlowStep Spring Boot Starter for Spring Boot 2.7.x+ and Java 8+'
+
+// Java configuration (will use system Java)
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// Spring Boot 2.7.x dependencies
+ext {
+    springBootVersion = '2.7.18'  // Latest 2.7.x version
+    springVersion = '5.3.31'      // Compatible Spring version
+    javaxValidationVersion = '2.0.1.Final'  // Java EE validation for Boot 2.x
+}
+
+dependencies {
+    // Spring Boot 2.7.x - Provided scope (users will have these)
+    compileOnly "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+    compileOnly "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    compileOnly "org.springframework:spring-tx:${springVersion}"
+    compileOnly "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}"
+    
+    // Java EE Validation API (for Boot 2.x)
+    compileOnly "javax.validation:validation-api:${javaxValidationVersion}"
+    
+    // Test Dependencies with Spring Boot 2.7.x
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    
+    // Optional ArchUnit - conditional compilation
+    testImplementation("com.tngtech.archunit:archunit-junit5:${archunitVersion}") {
+        // Make it optional - tests will check if class is available
+        exclude group: 'org.junit.jupiter', module: 'junit-jupiter-api'
+    }
+}
+
+// Target Java 8 bytecode for compatibility
+compileJava {
+    options.release = 8
+}
+
+compileTestJava {
+    options.release = 8
+}
+
+// Custom jar manifest for Spring Boot 2.x
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'FlowStep Spring Boot 2 Starter',
+            'Implementation-Version': version,
+            'Implementation-Vendor': 'XRF Technology',
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date().toString(),
+            'Built-JDK': System.getProperty('java.version'),
+            'Built-Gradle': gradle.gradleVersion,
+            'Spring-Boot-Version': springBootVersion,
+            'Minimum-Java-Version': '8'
+        )
+    }
+}
+
+// Test configuration for optional ArchUnit
+test {
+    systemProperty 'flowstep.archunit.enabled', 'false'  // Default to disabled
+    
+    // Enable ArchUnit tests if explicitly requested
+    if (project.hasProperty('enableArchUnit') && project.enableArchUnit == 'true') {
+        systemProperty 'flowstep.archunit.enabled', 'true'
+    }
+}
