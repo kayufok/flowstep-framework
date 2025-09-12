@@ -97,7 +97,7 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 <dependency>
     <groupId>net.xrftech</groupId>
     <artifactId>flowstep-spring-boot-2-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -116,7 +116,7 @@ net.xrftech.flowstep.config.FlowStepAutoConfiguration
 <dependency>
     <groupId>net.xrftech</groupId>
     <artifactId>flowstep-spring-boot-3-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
