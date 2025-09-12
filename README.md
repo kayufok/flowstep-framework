@@ -293,6 +293,17 @@ testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
 - **From 2.x to 3.x**: Change dependency from `flowstep-spring-boot-2-starter` to `flowstep-spring-boot-3-starter`
 - **Java Version**: Ensure Java 17+ when using Spring Boot 3.x starter
 
+## 📚 Documentation
+
+For detailed documentation, please see:
+
+- **[Complete Documentation Index](docs/README.md)** - Central hub for all documentation
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Design patterns and system architecture
+- **[Usage Guide](docs/USAGE_GUIDE.md)** - Practical examples and patterns
+- **[Testing Guide](docs/TESTING_GUIDE.md)** - Testing strategies and best practices
+- **[Configuration Reference](docs/CONFIGURATION_REFERENCE.md)** - All configuration options
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
