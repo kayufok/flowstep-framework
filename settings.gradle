@@ -2,3 +2,5 @@ rootProject.name = 'flowstep-spring-boot-starter'
 
 include 'flowstep-spring-boot-2-starter'
 include 'flowstep-spring-boot-3-starter'
+include 'examples:spring-boot-2-example'
+include 'examples:spring-boot-3-example'

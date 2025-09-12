@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: flowstep-example-spring-boot-3
+  
+  # Database Configuration (H2 for demo, MySQL commented out)
+  datasource:
+    url: jdbc:h2:mem:flowstep_demo;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    # For MySQL (uncomment and configure as needed):
+    # url: jdbc:mysql://localhost:3306/flowstep_demo?useSSL=false&serverTimezone=UTC
+    # driver-class-name: com.mysql.cj.jdbc.Driver
+    # username: flowstep_user
+    # password: flowstep_password
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        # For MySQL:
+        # dialect: org.hibernate.dialect.MySQL8Dialect
+  
+  # H2 Console (for development/testing)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# MyBatis Configuration
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  mapper-locations: classpath:mapper/*.xml
+
+# FlowStep Configuration
+flowstep:
+  enabled: true
+  performance:
+    metrics-enabled: true
+    slow-query-threshold-ms: 1000
+  logging:
+    step-execution: true
+    context-data: false
+
+# Logging Configuration
+logging:
+  level:
+    net.xrftech.flowstep: DEBUG
+    net.xrftech.flowstep.example: DEBUG
+    org.springframework.transaction: DEBUG
+    org.mybatis: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Server Configuration
+server:
+  port: 8081
+  servlet:
+    context-path: /flowstep-example
+
+# Management/Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
