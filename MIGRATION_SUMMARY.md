@@ -67,7 +67,7 @@ flowstep-spring-boot-starter/                    # Parent project
 <dependency>
     <groupId>net.xrftech</groupId>
     <artifactId>flowstep-spring-boot-2-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -77,7 +77,7 @@ flowstep-spring-boot-starter/                    # Parent project
 <dependency>
     <groupId>net.xrftech</groupId>
     <artifactId>flowstep-spring-boot-3-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 

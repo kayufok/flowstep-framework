@@ -35,13 +35,13 @@ FlowStep provides two starter modules to support different environments:
 <dependency>
     <groupId>net.xrftech</groupId>
     <artifactId>flowstep-spring-boot-2-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
 #### Gradle
 ```gradle
-implementation 'net.xrftech:flowstep-spring-boot-2-starter:1.0.0-SNAPSHOT'
+implementation 'net.xrftech:flowstep-spring-boot-2-starter:1.0.0'
 ```
 
 ### For Spring Boot 3.x + Java 17+
@@ -51,13 +51,13 @@ implementation 'net.xrftech:flowstep-spring-boot-2-starter:1.0.0-SNAPSHOT'
 <dependency>
     <groupId>net.xrftech</groupId>
     <artifactId>flowstep-spring-boot-3-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
 #### Gradle
 ```gradle
-implementation 'net.xrftech:flowstep-spring-boot-3-starter:1.0.0-SNAPSHOT'
+implementation 'net.xrftech:flowstep-spring-boot-3-starter:1.0.0'
 ```
 
 ## 🏁 5-Minute Tutorial
