@@ -64,8 +64,7 @@ subprojects {
         // SLF4J - Logging facade
         compileOnly "org.slf4j:slf4j-api:${slf4jVersion}"
         
-        // Optional: Validation API
-        compileOnly "jakarta.validation:jakarta.validation-api:${validationApiVersion}"
+        // Optional: Validation API - subprojects will define their own based on Spring Boot version
         
         // Test Dependencies
         testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
