@@ -114,7 +114,7 @@ class CommandTemplateTest {
 
         @Override
         protected String buildResponse(CommandContext context) {
-            return "executed: " + context.<TestCommand>get("request").getAction();
+            return "executed: " + context.<TestCommand>getCommand().getAction();
         }
     }
 }
