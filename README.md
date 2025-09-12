@@ -1,127 +1,172 @@
-# 🔄 FlowStep Framework
+# 🔄 FlowStep Spring Boot Starter
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.xrftech/flowstep/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.xrftech/flowstep)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.xrftech/flowstep-spring-boot-starter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.xrftech/flowstep-spring-boot-starter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/kayufok/flowstep-framework/workflows/CI/badge.svg)](https://github.com/kayufok/flowstep-framework/actions)
+[![Build Status](https://github.com/kayufok/flowstep-spring-boot-starter/workflows/CI/badge.svg)](https://github.com/kayufok/flowstep-spring-boot-starter/actions)
 
-> **Clean CQRS framework for Spring Boot applications of any size - from prototype to production.**
+> **Clean CQRS Spring Boot Starter for applications of any size - from prototype to production.**
 
 ## 🎯 Why FlowStep?
 
-Modern applications need **clean architecture**, **testable code**, and **maintainable business logic**. FlowStep provides:
+Modern Spring Boot applications need **clean architecture**, **testable code**, and **maintainable business logic**. FlowStep provides:
 
 - 🔥 **CQRS Pattern**: Clean separation between read (Query) and write (Command) operations
 - 🏗️ **Template Method**: Enforced execution flow prevents architectural drift
 - 🔧 **Step-Based Design**: Highly testable, modular components
 - 🛡️ **Type-Safe Error Handling**: Comprehensive error classification and management
 - ⚡ **Spring Boot Integration**: Seamless auto-configuration and dependency injection
+- 🎯 **Multi-Version Support**: Java 8+ & Spring Boot 2.7.x + Java 17+ & Spring Boot 3.x
+
+## 📦 Choose Your Version
+
+FlowStep provides two starter modules to support different environments:
+
+| Starter | Java Version | Spring Boot Version | Use Case |
+|---------|-------------|-------------------|----------|
+| **flowstep-spring-boot-2-starter** | Java 8+ | Spring Boot 2.7.x+ | Legacy applications, Java 8 environments |
+| **flowstep-spring-boot-3-starter** | Java 17+ | Spring Boot 3.x+ | Modern applications, latest features |
 
 ## 🚀 Quick Start
 
-### Maven
+### For Spring Boot 2.7.x + Java 8+
+
+#### Maven
 ```xml
 <dependency>
     <groupId>net.xrftech</groupId>
-    <artifactId>flowstep</artifactId>
+    <artifactId>flowstep-spring-boot-2-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
-### Gradle
+#### Gradle
 ```gradle
-implementation 'net.xrftech:flowstep:1.0.0-SNAPSHOT'
+implementation 'net.xrftech:flowstep-spring-boot-2-starter:1.0.0-SNAPSHOT'
 ```
 
-### Basic Usage
+### For Spring Boot 3.x + Java 17+
 
-**1. Create a Query Service (Read Operation):**
+#### Maven
+```xml
+<dependency>
+    <groupId>net.xrftech</groupId>
+    <artifactId>flowstep-spring-boot-3-starter</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
 
+#### Gradle
+```gradle
+implementation 'net.xrftech:flowstep-spring-boot-3-starter:1.0.0-SNAPSHOT'
+```
+
+## 🏁 5-Minute Tutorial
+
+### Step 1: Add the Starter
+Add the appropriate starter dependency (see above) to your project.
+
+### Step 2: Create Your First Query
 ```java
 @QueryFlow(code = "USER_PROFILE", desc = "Retrieve user profile information")
 @Service
 public class UserProfileQueryService extends QueryTemplate<UserProfileRequest, UserProfileResponse> {
 
     private final UserRepository userRepository;
-    private final PreferencesService preferencesService;
 
     @Override
     protected List<QueryStep<?>> steps(UserProfileRequest request, QueryContext context) {
-        List<QueryStep<?>> steps = new ArrayList<>();
-        
-        // Always fetch user data
-        steps.add(new FetchUserStep(userRepository));
-        
-        // Conditionally fetch preferences
-        if (request.isIncludePreferences()) {
-            steps.add(new FetchPreferencesStep(preferencesService));
-        }
-        
-        return steps;
+        return List.of(
+            () -> {
+                User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+                context.put("user", user);
+                return StepResult.success(user);
+            }
+        );
     }
 
     @Override
     protected UserProfileResponse buildResponse(QueryContext context) {
         User user = context.get("user");
-        UserPreferences preferences = context.get("preferences");
-        return new UserProfileResponse(user, preferences);
+        return new UserProfileResponse(user.getId(), user.getName(), user.getEmail());
     }
 }
 ```
 
-**2. Create a Command Service (Write Operation):**
-
+### Step 3: Create Your First Command
 ```java
 @CommandFlow(code = "CREATE_ORDER", desc = "Process new customer order")
 @Service
 @Transactional
 public class CreateOrderService extends CommandTemplate<CreateOrderCommand, OrderCreatedResponse> {
 
-    private final InventoryService inventoryService;
-    private final PaymentService paymentService;
     private final OrderRepository orderRepository;
 
     @Override
     protected List<CommandStep<?>> steps(CreateOrderCommand command, CommandContext context) {
         return List.of(
-            new ValidateInventoryStep(inventoryService),
-            new ProcessPaymentStep(paymentService),
-            new CreateOrderStep(orderRepository),
-            new SendConfirmationStep()
+            () -> {
+                Order order = new Order(command.getUserId(), command.getItems());
+                Order savedOrder = orderRepository.save(order);
+                context.put("order", savedOrder);
+                return StepResult.success(savedOrder);
+            }
         );
     }
 
     @Override
     protected OrderCreatedResponse buildResponse(CommandContext context) {
-        Order createdOrder = context.get("order");
-        return new OrderCreatedResponse(createdOrder.getId(), createdOrder.getOrderNumber());
+        Order order = context.get("order");
+        return new OrderCreatedResponse(order.getId(), order.getOrderNumber());
     }
 }
 ```
 
-**3. Implement Steps:**
-
+### Step 4: Use in Your Controller
 ```java
-@Component
-public class FetchUserStep implements QueryStep<User> {
-    
-    private final UserRepository userRepository;
+@RestController
+@RequestMapping("/api")
+public class UserController {
 
-    @Override
-    public StepResult<User> execute(QueryContext context) {
-        try {
-            UserProfileRequest request = context.getRequest();
-            User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new UserNotFoundException(request.getUserId()));
-            
-            context.put("user", user);
-            return StepResult.success(user);
-        } catch (UserNotFoundException e) {
-            return StepResult.failure("User not found", "USER_NOT_FOUND", ErrorType.BUSINESS);
-        } catch (Exception e) {
-            return StepResult.systemFailure("Database error occurred");
-        }
+    private final UserProfileQueryService userProfileQuery;
+    private final CreateOrderService createOrderCommand;
+
+    @GetMapping("/users/{id}")
+    public UserProfileResponse getUser(@PathVariable Long id) throws BusinessException {
+        return userProfileQuery.execute(new UserProfileRequest(id));
+    }
+
+    @PostMapping("/orders")
+    public OrderCreatedResponse createOrder(@RequestBody CreateOrderCommand command) throws BusinessException {
+        return createOrderCommand.execute(command);
     }
 }
+```
+
+That's it! FlowStep automatically configures itself and provides global exception handling.
+
+## ⚙️ Configuration
+
+FlowStep can be configured through `application.properties` or `application.yml`:
+
+```properties
+# Enable/disable FlowStep (default: true)
+flowstep.enabled=true
+
+# Enable/disable global exception handler (default: true)
+flowstep.exception-handler.enabled=true
+
+# Include stack traces in error responses (default: false)
+flowstep.exception-handler.include-stack-trace=false
+```
+
+Or with YAML:
+```yaml
+flowstep:
+  enabled: true
+  exception-handler:
+    enabled: true
+    include-stack-trace: false
 ```
 
 ## 📚 Core Concepts
@@ -156,36 +201,6 @@ context.put("calculatedTotal", total);
 // Retrieve data from previous steps
 User user = context.get("user");
 BigDecimal total = context.getOrDefault("total", BigDecimal.ZERO);
-```
-
-## 🔧 Configuration
-
-### **Auto-Configuration**
-The framework automatically configures itself when Spring Boot detects it on the classpath:
-
-```java
-@SpringBootApplication
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-    // FlowStep Framework is automatically configured!
-}
-```
-
-### **Custom Global Exception Handler**
-```java
-@ControllerAdvice
-public class CustomExceptionHandler extends GlobalExceptionHandler {
-    
-    @Override
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
-        // Custom business exception handling
-        logBusinessException(e);
-        return super.handleBusinessException(e);
-    }
-}
 ```
 
 ## 🏗️ Architecture
@@ -252,11 +267,31 @@ class UserProfileQueryServiceTest {
 }
 ```
 
-## 📖 Documentation
+### **Optional Architecture Testing**
+FlowStep includes optional ArchUnit support for architecture validation:
 
-- **[Migration Guide](docs/migration-steps.md)** - Complete demo-to-library migration
-- **[Library Development Guide](docs/library-development-guide.md)** - Publishing and maintenance
-- **[Library Checklist](docs/library-checklist.md)** - Pre-release verification
+```bash
+# Enable architecture tests
+./gradlew test -PenableArchUnit=true
+```
+
+Add ArchUnit dependency if you want architecture testing:
+```gradle
+testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
+```
+
+## 🔄 Migration Guide
+
+### From Plain Spring Services
+1. Add the appropriate FlowStep starter dependency
+2. Extend `QueryTemplate` for read operations
+3. Extend `CommandTemplate` for write operations  
+4. Break down logic into composable steps
+5. Use context for step communication
+
+### Version Migration
+- **From 2.x to 3.x**: Change dependency from `flowstep-spring-boot-2-starter` to `flowstep-spring-boot-3-starter`
+- **Java Version**: Ensure Java 17+ when using Spring Boot 3.x starter
 
 ## 🤝 Contributing
 
@@ -265,14 +300,18 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### **Development Setup**
 ```bash
 # Clone repository
-git clone https://github.com/kayufok/flowstep-framework.git
-cd flowstep-framework
+git clone https://github.com/kayufok/flowstep-spring-boot-starter.git
+cd flowstep-spring-boot-starter
 
-# Build and test
+# Build all modules
 ./gradlew build
 
-# Run tests
-./gradlew test
+# Test specific module
+./gradlew :flowstep-spring-boot-2-starter:test
+./gradlew :flowstep-spring-boot-3-starter:test
+
+# Run with architecture tests
+./gradlew test -PenableArchUnit=true
 ```
 
 ## 📄 License
@@ -288,11 +327,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/kayufok/flowstep-framework/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/kayufok/flowstep-framework/discussions)  
+- **Issues**: [GitHub Issues](https://github.com/kayufok/flowstep-spring-boot-starter/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kayufok/flowstep-spring-boot-starter/discussions)  
+
+## 🔗 Related Projects
+
+- **Examples**: [FlowStep Examples Repository](https://github.com/kayufok/flowstep-examples)
+- **Documentation**: [FlowStep Documentation](https://flowstep.xrftech.net)
 
 ---
 
-**⭐ If this framework helps your enterprise development, please consider giving it a star!**
+**⭐ If this starter helps your Spring Boot development, please consider giving it a star!**
 
-*Made with ❤️ for enterprise Java developers*
+*Made with ❤️ for Spring Boot developers*
