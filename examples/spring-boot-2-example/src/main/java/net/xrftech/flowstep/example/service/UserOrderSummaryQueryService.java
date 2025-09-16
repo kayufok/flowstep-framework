@@ -3,6 +3,7 @@ package net.xrftech.flowstep.example.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.xrftech.flowstep.QueryTemplate;
+import net.xrftech.flowstep.annotation.QueryFlow;
 import net.xrftech.flowstep.context.QueryContext;
 import net.xrftech.flowstep.exception.ErrorType;
 import net.xrftech.flowstep.step.QueryStep;
@@ -38,6 +39,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@QueryFlow(code = "USER_ORDER_SUMMARY", desc = "Retrieve comprehensive user order summary with statistics and top products")
 public class UserOrderSummaryQueryService extends QueryTemplate<UserOrderSummaryRequest, UserOrderSummaryResponse> {
     
     private final FetchUserStep fetchUserStep;
