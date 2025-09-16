@@ -3,6 +3,7 @@ package net.xrftech.flowstep.example.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.xrftech.flowstep.CommandTemplate;
+import net.xrftech.flowstep.annotation.CommandFlow;
 import net.xrftech.flowstep.context.CommandContext;
 import net.xrftech.flowstep.exception.ErrorType;
 import net.xrftech.flowstep.step.CommandStep;
@@ -37,6 +38,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional  // Required for CommandTemplate operations
+@CommandFlow(code = "CREATE_ORDER", desc = "Process new customer order with multi-step validation and persistence")
 public class CreateOrderCommandService extends CommandTemplate<CreateOrderCommand, CreateOrderResponse> {
     
     private final ValidateUserStep validateUserStep;
