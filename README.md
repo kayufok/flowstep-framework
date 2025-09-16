@@ -4,27 +4,28 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/kayufok/flowstep-spring-boot-starter/workflows/CI/badge.svg)](https://github.com/kayufok/flowstep-spring-boot-starter/actions)
 
-> **Clean CQRS Spring Boot Starter for applications of any size - from prototype to production.**
+> **Clean CQRS Spring Boot Starter implementing Template Method pattern for maintainable, step-based business logic execution.**
 
 ## 🎯 Why FlowStep?
 
 Modern Spring Boot applications need **clean architecture**, **testable code**, and **maintainable business logic**. FlowStep provides:
 
 - 🔥 **CQRS Pattern**: Clean separation between read (Query) and write (Command) operations
-- 🏗️ **Template Method**: Enforced execution flow prevents architectural drift
-- 🔧 **Step-Based Design**: Highly testable, modular components
-- 🛡️ **Type-Safe Error Handling**: Comprehensive error classification and management
-- ⚡ **Spring Boot Integration**: Seamless auto-configuration and dependency injection
-- 🎯 **Multi-Version Support**: Java 8+ & Spring Boot 2.7.x + Java 17+ & Spring Boot 3.x
+- 🏗️ **Template Method**: Enforced 4-step execution flow prevents architectural drift
+- 🔧 **Step-Based Design**: Highly testable, modular components with context-based communication
+- 🛡️ **Type-Safe Error Handling**: 3-tier error classification (Validation, Business, System)
+- ⚡ **Spring Boot Integration**: Zero-configuration auto-setup with global exception handling
+- 🎯 **Multi-Version Support**: Dual starters for Spring Boot 2.7.x+ (Java 8+) and 3.x+ (Java 17+)
+- 📊 **Enterprise Ready**: Transaction management, audit trails, and event publishing support
 
 ## 📦 Choose Your Version
 
 FlowStep provides two starter modules to support different environments:
 
-| Starter | Java Version | Spring Boot Version | Use Case |
-|---------|-------------|-------------------|----------|
-| **flowstep-spring-boot-2-starter** | Java 8+ | Spring Boot 2.7.x+ | Legacy applications, Java 8 environments |
-| **flowstep-spring-boot-3-starter** | Java 17+ | Spring Boot 3.x+ | Modern applications, latest features |
+| Starter | Java Version | Spring Boot Version | Key Dependencies | Use Case |
+|---------|-------------|-------------------|------------------|----------|
+| **flowstep-spring-boot-2-starter** | Java 8+ | 2.7.18+ | Spring 5.3.x, javax.validation | Legacy applications, Java 8 environments |
+| **flowstep-spring-boot-3-starter** | Java 17+ | 3.2.1+ | Spring 6.1.x, jakarta.validation | Modern applications, latest features |
 
 ## 🚀 Quick Start
 
@@ -67,28 +68,43 @@ Add the appropriate starter dependency (see above) to your project.
 
 ### Step 2: Create Your First Query
 ```java
-@QueryFlow(code = "USER_PROFILE", desc = "Retrieve user profile information")
+@QueryFlow(code = "USER_ORDER_SUMMARY", desc = "Retrieve user order summary")
 @Service
-public class UserProfileQueryService extends QueryTemplate<UserProfileRequest, UserProfileResponse> {
+public class UserOrderSummaryQueryService extends QueryTemplate<UserOrderSummaryRequest, UserOrderSummaryResponse> {
 
-    private final UserRepository userRepository;
+    private final FetchUserStep fetchUserStep;
+    private final FetchUserOrdersStep fetchUserOrdersStep;
+    private final CalculateOrderStatisticsStep calculateOrderStatisticsStep;
 
     @Override
-    protected List<QueryStep<?>> steps(UserProfileRequest request, QueryContext context) {
-        return List.of(
-            () -> {
-                User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-                context.put("user", user);
-                return StepResult.success(user);
-            }
+    protected StepResult<Void> validate(UserOrderSummaryRequest request) {
+        if (request.getUserId() == null || request.getUserId() <= 0) {
+            return StepResult.failure("VAL_001", "User ID must be positive", ErrorType.VALIDATION);
+        }
+        return StepResult.success();
+    }
+
+    @Override
+    protected List<QueryStep<?>> steps(UserOrderSummaryRequest request, QueryContext context) {
+        return Arrays.asList(
+            fetchUserStep,              // Step 1: Fetch user info
+            fetchUserOrdersStep,        // Step 2: Fetch user orders (depends on user)
+            calculateOrderStatisticsStep // Step 3: Calculate statistics
         );
     }
 
     @Override
-    protected UserProfileResponse buildResponse(QueryContext context) {
-        User user = context.get("user");
-        return new UserProfileResponse(user.getId(), user.getName(), user.getEmail());
+    protected UserOrderSummaryResponse buildResponse(QueryContext context) {
+        User user = context.get("user", User.class);
+        List<Order> userOrders = context.get("userOrders");
+        Map<String, Object> statistics = context.get("orderStatistics");
+        
+        return UserOrderSummaryResponse.builder()
+            .user(user)
+            .recentOrders(userOrders)
+            .totalSpent((BigDecimal) statistics.get("totalSpent"))
+            .totalOrderCount((Integer) statistics.get("totalOrderCount"))
+            .build();
     }
 }
 ```
@@ -97,27 +113,55 @@ public class UserProfileQueryService extends QueryTemplate<UserProfileRequest, U
 ```java
 @CommandFlow(code = "CREATE_ORDER", desc = "Process new customer order")
 @Service
-@Transactional
-public class CreateOrderService extends CommandTemplate<CreateOrderCommand, OrderCreatedResponse> {
+@Transactional  // Required for CommandTemplate operations
+public class CreateOrderCommandService extends CommandTemplate<CreateOrderCommand, CreateOrderResponse> {
 
-    private final OrderRepository orderRepository;
+    private final ValidateUserStep validateUserStep;
+    private final ValidateProductsAndStockStep validateProductsAndStockStep;
+    private final CreateOrderStep createOrderStep;
+    private final CreateOrderItemsAndUpdateStockStep createOrderItemsAndUpdateStockStep;
+
+    @Override
+    protected StepResult<Void> validate(CreateOrderCommand command) {
+        if (command.getUserId() == null || command.getUserId() <= 0) {
+            return StepResult.failure("VAL_001", "User ID must be positive", ErrorType.VALIDATION);
+        }
+        
+        if (command.getOrderItems() == null || command.getOrderItems().isEmpty()) {
+            return StepResult.failure("VAL_002", "Order items are required", ErrorType.VALIDATION);
+        }
+        
+        return StepResult.success();
+    }
 
     @Override
     protected List<CommandStep<?>> steps(CreateOrderCommand command, CommandContext context) {
-        return List.of(
-            () -> {
-                Order order = new Order(command.getUserId(), command.getItems());
-                Order savedOrder = orderRepository.save(order);
-                context.put("order", savedOrder);
-                return StepResult.success(savedOrder);
-            }
+        return Arrays.asList(
+            validateUserStep,                    // Step 1: Validate user
+            validateProductsAndStockStep,        // Step 2: Validate products and stock
+            createOrderStep,                     // Step 3: Create order
+            createOrderItemsAndUpdateStockStep   // Step 4: Create order items and update stock
         );
     }
 
     @Override
-    protected OrderCreatedResponse buildResponse(CommandContext context) {
-        Order order = context.get("order");
-        return new OrderCreatedResponse(order.getId(), order.getOrderNumber());
+    protected CreateOrderResponse buildResponse(CommandContext context) {
+        Order createdOrder = context.get("createdOrder", Order.class);
+        List<OrderItem> createdOrderItems = context.get("createdOrderItems");
+        
+        return CreateOrderResponse.builder()
+            .order(createdOrder)
+            .orderItems(createdOrderItems)
+            .message("Order created successfully with " + createdOrderItems.size() + " items")
+            .build();
+    }
+
+    @Override
+    protected void handlePostExecution(CommandContext context) {
+        // Publish domain events, send notifications, etc.
+        List<Object> events = context.getEvents();
+        log.info("Order creation completed with {} audit events", events.size());
+        super.handlePostExecution(context);
     }
 }
 ```
@@ -125,25 +169,71 @@ public class CreateOrderService extends CommandTemplate<CreateOrderCommand, Orde
 ### Step 4: Use in Your Controller
 ```java
 @RestController
-@RequestMapping("/api")
-public class UserController {
+@RequestMapping("/api/orders")
+@RequiredArgsConstructor
+public class OrderController {
 
-    private final UserProfileQueryService userProfileQuery;
-    private final CreateOrderService createOrderCommand;
+    private final UserOrderSummaryQueryService userOrderSummaryQuery;
+    private final CreateOrderCommandService createOrderCommand;
 
-    @GetMapping("/users/{id}")
-    public UserProfileResponse getUser(@PathVariable Long id) throws BusinessException {
-        return userProfileQuery.execute(new UserProfileRequest(id));
+    @GetMapping("/users/{userId}/summary")
+    public UserOrderSummaryResponse getUserOrderSummary(
+            @PathVariable Long userId,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) throws BusinessException {
+        
+        var request = UserOrderSummaryRequest.builder()
+            .userId(userId)
+            .startDate(startDate)
+            .endDate(endDate)
+            .includeTopProducts(true)
+            .build();
+            
+        return userOrderSummaryQuery.execute(request);
     }
 
-    @PostMapping("/orders")
-    public OrderCreatedResponse createOrder(@RequestBody CreateOrderCommand command) throws BusinessException {
+    @PostMapping
+    public CreateOrderResponse createOrder(@RequestBody CreateOrderCommand command) throws BusinessException {
         return createOrderCommand.execute(command);
     }
 }
 ```
 
 That's it! FlowStep automatically configures itself and provides global exception handling.
+
+## 🔧 Key Components
+
+### **Core Framework Classes**
+```
+net.xrftech.flowstep/
+├── QueryTemplate<R,S>              # Abstract base for read operations
+├── CommandTemplate<C,R>            # Abstract base for write operations  
+├── context/
+│   ├── BaseContext                 # Common context functionality
+│   ├── QueryContext               # Query-specific context with request data
+│   └── CommandContext             # Command-specific context with audit info
+├── step/
+│   ├── QueryStep<T>               # Functional interface for query steps
+│   ├── CommandStep<T>             # Functional interface for command steps
+│   └── StepResult<T>              # Type-safe step execution result
+├── exception/
+│   ├── BusinessException          # Framework business exception
+│   ├── ErrorType                  # Error classification enum
+│   ├── ErrorResponse              # REST error response DTO
+│   └── GlobalExceptionHandler     # Spring Boot global exception handler
+├── annotation/
+│   ├── @QueryFlow                 # Query service documentation annotation
+│   └── @CommandFlow               # Command service documentation annotation
+└── config/
+    ├── FlowStepAutoConfiguration  # Spring Boot auto-configuration
+    └── FlowStepProperties         # Configuration properties
+```
+
+### **Auto-Configuration Features**
+- **Zero Configuration**: Works out-of-the-box with Spring Boot
+- **Global Exception Handler**: Automatic REST error response formatting
+- **Conditional Beans**: Smart bean creation based on classpath detection
+- **Property Binding**: Externalized configuration via `flowstep.*` properties
 
 ## ⚙️ Configuration
 
@@ -172,15 +262,18 @@ flowstep:
 ## 📚 Core Concepts
 
 ### **Template Pattern Enforcement**
-Every service follows a consistent 4-step flow:
-1. **Validation** - Request/command validation
-2. **Context Setup** - Shared data initialization  
-3. **Step Execution** - Business logic in composable steps
-4. **Response Building** - Result aggregation
+Every service follows a consistent 4-step execution flow:
+1. **Validation** - Request/command validation with StepResult
+2. **Context Initialization** - Shared data setup with audit information
+3. **Step Execution** - Sequential business logic steps with context communication
+4. **Response Building** - Final response aggregation from context data
+
+**Additional for Commands:**
+- **Post-Execution** - Event publishing and audit handling
 
 ### **CQRS Separation**
-- **Query Services**: Read-only, no transactions, cacheable
-- **Command Services**: Write operations, transactional, auditable
+- **QueryTemplate**: Read-only operations, no transactions, immutable context sharing
+- **CommandTemplate**: Write operations, requires @Transactional, event publishing support
 
 ### **Error Handling Strategy**
 ```java
@@ -195,34 +288,59 @@ public enum ErrorType {
 Steps communicate through type-safe context objects:
 ```java
 // Store data for other steps
-context.put("userId", user.getId());
-context.put("calculatedTotal", total);
+context.put("user", user);
+context.put("createdOrder", savedOrder);
 
-// Retrieve data from previous steps
-User user = context.get("user");
-BigDecimal total = context.getOrDefault("total", BigDecimal.ZERO);
+// Retrieve data from previous steps (type-safe)
+User user = context.get("user", User.class);
+List<OrderItem> items = context.get("createdOrderItems");
+
+// Query context includes request access
+QueryContext queryContext = new QueryContext();
+queryContext.setRequest(request);
+queryContext.markStartTime();
+
+// Command context includes audit info
+CommandContext commandContext = new CommandContext();
+commandContext.setCommand(command);
+commandContext.setTimestamp(LocalDateTime.now());
+commandContext.addEvent(new OrderCreatedEvent(order.getId()));
 ```
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐
-│   Controller    │    │   Controller    │
-│    (HTTP)       │    │    (HTTP)       │
-└─────────┬───────┘    └─────────┬───────┘
-          │                      │
-          ▼                      ▼
-┌─────────────────┐    ┌─────────────────┐
-│  QueryTemplate  │    │ CommandTemplate │
-│   (Read-Only)   │    │ (Transactional) │
-└─────────┬───────┘    └─────────┬───────┘
-          │                      │
-          ▼                      ▼
-┌─────────────────┐    ┌─────────────────┐
-│   QueryStep     │    │  CommandStep    │
-│   QueryStep     │    │  CommandStep    │
-│   QueryStep     │    │  CommandStep    │
-└─────────────────┘    └─────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        FlowStep Framework                           │
+├─────────────────────────────────────────────────────────────────────┤
+│  @RestController                                                    │
+│  ├── QueryService.execute(request) → Response                       │
+│  └── CommandService.execute(command) → Response                     │
+└─────────────────────┬───────────────────┬───────────────────────────┘
+                      │                   │
+          ┌───────────▼──────────┐    ┌───▼──────────────────┐
+          │   QueryTemplate      │    │   CommandTemplate    │
+          │   (Read Operations)  │    │  (Write Operations)  │
+          └───────────┬──────────┘    └───┬──────────────────┘
+                      │                   │
+          ┌───────────▼──────────┐    ┌───▼──────────────────┐
+          │ 1. validate()        │    │ 1. validate()        │
+          │ 2. Context Setup     │    │ 2. initializeContext()│
+          │ 3. steps() execution │    │ 3. steps() execution │
+          │ 4. buildResponse()   │    │ 4. buildResponse()   │
+          │                      │    │ 5. handlePostExecution()│
+          └───────────┬──────────┘    └───┬──────────────────┘
+                      │                   │
+          ┌───────────▼──────────┐    ┌───▼──────────────────┐
+          │   QueryStep<T>       │    │   CommandStep<T>     │
+          │   QueryStep<T>       │    │   CommandStep<T>     │
+          │   QueryStep<T>       │    │   CommandStep<T>     │
+          │                      │    │                      │
+          │ Context: QueryContext│    │ Context: CommandContext│
+          │ - Request data       │    │ - Command data       │
+          │ - Shared state       │    │ - Audit info         │
+          │ - Execution timing   │    │ - Event publishing   │
+          └──────────────────────┘    └──────────────────────┘
 ```
 
 ## 🧪 Testing
@@ -231,18 +349,42 @@ BigDecimal total = context.getOrDefault("total", BigDecimal.ZERO);
 ```java
 class FetchUserStepTest {
     
+    @MockBean
+    private UserRepository userRepository;
+    
     @Test
     void shouldFetchUserSuccessfully() {
         // Given
         QueryContext context = new QueryContext();
-        context.setRequest(new UserProfileRequest(123L));
+        context.setRequest(UserOrderSummaryRequest.builder().userId(123L).build());
+        
+        User mockUser = new User(123L, "John Doe", "john@example.com", User.UserStatus.ACTIVE);
+        when(userRepository.findById(123L)).thenReturn(Optional.of(mockUser));
         
         // When
         StepResult<User> result = fetchUserStep.execute(context);
         
         // Then
         assertThat(result.isSuccess()).isTrue();
-        assertThat(context.<User>get("user")).isNotNull();
+        assertThat(context.get("user", User.class)).isEqualTo(mockUser);
+        assertThat(context.get("user", User.class).getStatus()).isEqualTo(User.UserStatus.ACTIVE);
+    }
+    
+    @Test
+    void shouldFailWhenUserNotFound() {
+        // Given
+        QueryContext context = new QueryContext();
+        context.setRequest(UserOrderSummaryRequest.builder().userId(999L).build());
+        
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+        
+        // When
+        StepResult<User> result = fetchUserStep.execute(context);
+        
+        // Then
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getErrorType()).isEqualTo(ErrorType.BUSINESS);
+        assertThat(result.getErrorCode()).isEqualTo("USR_001");
     }
 }
 ```
@@ -250,19 +392,43 @@ class FetchUserStepTest {
 ### **Integration Testing Services**
 ```java
 @SpringBootTest
-class UserProfileQueryServiceTest {
+@Transactional
+class CreateOrderCommandServiceTest {
+    
+    @Autowired
+    private CreateOrderCommandService createOrderService;
+    
+    @Autowired
+    private TestEntityManager entityManager;
     
     @Test
-    void shouldRetrieveCompleteUserProfile() throws Exception {
-        // Given
-        UserProfileRequest request = new UserProfileRequest(userId, true);
+    void shouldCreateOrderSuccessfully() throws Exception {
+        // Given - Create test data
+        User user = new User("John Doe", "john@example.com", User.UserStatus.ACTIVE);
+        entityManager.persistAndFlush(user);
+        
+        CreateOrderCommand command = CreateOrderCommand.builder()
+            .userId(user.getId())
+            .orderItems(List.of(
+                CreateOrderCommand.OrderItem.builder()
+                    .productId(1L)
+                    .quantity(2)
+                    .build()
+            ))
+            .build();
         
         // When
-        UserProfileResponse response = userProfileService.execute(request);
+        CreateOrderResponse response = createOrderService.execute(command);
         
         // Then
-        assertThat(response.getUser()).isNotNull();
-        assertThat(response.getPreferences()).isNotNull();
+        assertThat(response.getOrder()).isNotNull();
+        assertThat(response.getOrderItems()).hasSize(1);
+        assertThat(response.getMessage()).contains("Order created successfully");
+        
+        // Verify database state
+        Order savedOrder = entityManager.find(Order.class, response.getOrder().getId());
+        assertThat(savedOrder.getUserId()).isEqualTo(user.getId());
+        assertThat(savedOrder.getStatus()).isEqualTo(Order.OrderStatus.PENDING);
     }
 }
 ```
@@ -271,13 +437,30 @@ class UserProfileQueryServiceTest {
 FlowStep includes optional ArchUnit support for architecture validation:
 
 ```bash
-# Enable architecture tests
+# Enable architecture tests (disabled by default)
 ./gradlew test -PenableArchUnit=true
+
+# Test specific module
+./gradlew :flowstep-spring-boot-3-starter:test -PenableArchUnit=true
 ```
 
-Add ArchUnit dependency if you want architecture testing:
-```gradle
-testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
+ArchUnit is included as a test dependency but tests are conditionally enabled:
+```java
+@EnabledIf("#{systemProperties['flowstep.archunit.enabled'] == 'true'}")
+class ArchitectureTest {
+    
+    @Test
+    void queryServicesShouldExtendQueryTemplate() {
+        classes().that().areAnnotatedWith(QueryFlow.class)
+            .should().beAssignableTo(QueryTemplate.class);
+    }
+    
+    @Test 
+    void commandServicesShouldExtendCommandTemplate() {
+        classes().that().areAnnotatedWith(CommandFlow.class)
+            .should().beAssignableTo(CommandTemplate.class);
+    }
+}
 ```
 
 ## 🔄 Migration Guide
@@ -314,15 +497,22 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 git clone https://github.com/kayufok/flowstep-spring-boot-starter.git
 cd flowstep-spring-boot-starter
 
-# Build all modules
+# Build all modules (parent + 2 starters + 2 examples)
 ./gradlew build
 
-# Test specific module
+# Test specific modules
 ./gradlew :flowstep-spring-boot-2-starter:test
 ./gradlew :flowstep-spring-boot-3-starter:test
 
-# Run with architecture tests
+# Test examples
+./gradlew :examples:spring-boot-2-example:test
+./gradlew :examples:spring-boot-3-example:test
+
+# Run with architecture tests (optional)
 ./gradlew test -PenableArchUnit=true
+
+# Print project information
+./gradlew printVersion
 ```
 
 ## 📄 License
@@ -335,16 +525,36 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - CQRS concepts from Greg Young and Udi Dahan  
 - Template Method pattern from Gang of Four Design Patterns
 - Spring Boot team for excellent framework foundation
+- Lombok project for reducing boilerplate code
+- ArchUnit for architecture testing capabilities
 
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/kayufok/flowstep-spring-boot-starter/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/kayufok/flowstep-spring-boot-starter/discussions)  
 
+## 🔗 Project Structure
+
+```
+flowstep-spring-boot-starter/
+├── flowstep-spring-boot-2-starter/    # Java 8+ & Spring Boot 2.7.x support
+├── flowstep-spring-boot-3-starter/    # Java 17+ & Spring Boot 3.x support  
+├── examples/
+│   ├── spring-boot-2-example/         # Comprehensive example for Boot 2.x
+│   └── spring-boot-3-example/         # Comprehensive example for Boot 3.x
+├── docs/                              # Complete documentation
+│   ├── API_REFERENCE.md
+│   ├── ARCHITECTURE.md
+│   ├── USAGE_GUIDE.md
+│   ├── TESTING_GUIDE.md
+│   └── CONFIGURATION_REFERENCE.md
+└── summaries/                         # Development summaries
+```
+
 ## 🔗 Related Projects
 
-- **Examples**: [FlowStep Examples Repository](https://github.com/kayufok/flowstep-examples)
-- **Documentation**: [FlowStep Documentation](https://flowstep.xrftech.net)
+- **Examples**: Included in this repository under `/examples`
+- **Documentation**: Complete documentation available in `/docs`
 
 ---
 
