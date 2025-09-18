@@ -104,7 +104,7 @@ subprojects {
                 pom {
                     name = project.name
                     description = project.description
-                    url = 'https://github.com/kayufok/flowstep-spring-boot-starter'
+                    url = 'https://github.com/kayufok/flowstep-framework'
                     inceptionYear = '2024'
                     
                     licenses {
@@ -125,19 +125,20 @@ subprojects {
                     }
                     
                     scm {
-                        connection = 'scm:git:https://github.com/kayufok/flowstep-spring-boot-starter.git'
-                        developerConnection = 'scm:git:ssh://git@github.com:kayufok/flowstep-spring-boot-starter.git'
-                        url = 'https://github.com/kayufok/flowstep-spring-boot-starter'
+                        connection = 'scm:git:https://github.com/kayufok/flowstep-framework.git'
+                        developerConnection = 'scm:git:ssh://git@github.com:kayufok/flowstep-framework.git'
+                        url = 'https://github.com/kayufok/flowstep-framework'
                         tag = 'HEAD'
                     }
                     
                     issueManagement {
                         system = 'GitHub Issues'
-                        url = 'https://github.com/kayufok/flowstep-spring-boot-starter/issues'
+                        url = 'https://github.com/kayufok/flowstep-framework/issues'
                     }
                 }
             }
         }
+        
     }
 
     // Signing Configuration (for Maven Central)
@@ -145,7 +146,26 @@ subprojects {
         required { gradle.taskGraph.hasTask("publish") }
         sign publishing.publications.maven
     }
+}
 
+// Nexus Publishing Configuration (works with Central Portal credentials)
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            
+            // Use Central Portal credentials (they work with OSSRH endpoints too)
+            username = findProperty('centralPortalUsername') ?: findProperty('sonatypeUsername') ?: System.getenv('CENTRAL_PORTAL_USERNAME')
+            password = findProperty('centralPortalPassword') ?: findProperty('sonatypePassword') ?: System.getenv('CENTRAL_PORTAL_PASSWORD')
+        }
+    }
+    
+    connectTimeout = Duration.ofMinutes(5)
+    clientTimeout = Duration.ofMinutes(5)
+}
+
+subprojects {
     // Ensure reproducible builds
     tasks.withType(AbstractArchiveTask) {
         preserveFileTimestamps = false
@@ -153,21 +173,6 @@ subprojects {
     }
 }
 
-// Nexus Publishing Configuration (only for parent)
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            
-            username = findProperty('sonatypeUsername') ?: System.getenv('SONATYPE_USERNAME')
-            password = findProperty('sonatypePassword') ?: System.getenv('SONATYPE_PASSWORD')
-        }
-    }
-    
-    connectTimeout = Duration.ofMinutes(3)
-    clientTimeout = Duration.ofMinutes(3)
-}
 
 // Custom tasks for project management
 task printVersion {
@@ -175,6 +180,40 @@ task printVersion {
         println "FlowStep Spring Boot Starter Version: $version"
         println "Group: $group"
         println "Modules: ${subprojects.collect { it.name }}"
+    }
+}
+
+// Release preparation task
+task prepareRelease {
+    group = 'release'
+    description = 'Prepares the project for release'
+    
+    doLast {
+        // Verify no SNAPSHOT dependencies in subprojects
+        def hasSnapshots = false
+        subprojects.each { project ->
+            project.configurations.findAll { it.canBeResolved }.each { config ->
+                config.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+                    if (artifact.moduleVersion.id.version.contains('SNAPSHOT')) {
+                        println "SNAPSHOT dependency found in ${project.name}: ${artifact.moduleVersion.id}"
+                        hasSnapshots = true
+                    }
+                }
+            }
+        }
+        
+        if (hasSnapshots) {
+            throw new GradleException('Cannot release with SNAPSHOT dependencies')
+        }
+        
+        // Verify version is not SNAPSHOT
+        if (version.toString().contains('SNAPSHOT')) {
+            throw new GradleException('Cannot release SNAPSHOT version')
+        }
+        
+        println "✅ Release preparation complete"
+        println "Version: $version"
+        println "All checks passed!"
     }
 }
 
