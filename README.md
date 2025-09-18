@@ -2,7 +2,7 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.xrftech/flowstep-spring-boot-starter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.xrftech/flowstep-spring-boot-starter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/kayufok/flowstep-spring-boot-starter/workflows/CI/badge.svg)](https://github.com/kayufok/flowstep-spring-boot-starter/actions)
+[![Build Status](https://github.com/kayufok/flowstep-framework/workflows/CI/badge.svg)](https://github.com/kayufok/flowstep-framework/actions)
 
 > **Clean CQRS Spring Boot Starter implementing Template Method pattern for maintainable, step-based business logic execution.**
 
@@ -494,8 +494,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### **Development Setup**
 ```bash
 # Clone repository
-git clone https://github.com/kayufok/flowstep-spring-boot-starter.git
-cd flowstep-spring-boot-starter
+git clone https://github.com/kayufok/flowstep-framework.git
+cd flowstep-framework
 
 # Build all modules (parent + 2 starters + 2 examples)
 ./gradlew build
@@ -530,13 +530,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/kayufok/flowstep-spring-boot-starter/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/kayufok/flowstep-spring-boot-starter/discussions)  
+- **Issues**: [GitHub Issues](https://github.com/kayufok/flowstep-framework/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kayufok/flowstep-framework/discussions)  
 
 ## 🔗 Project Structure
 
 ```
-flowstep-spring-boot-starter/
+flowstep-framework/
 ├── flowstep-spring-boot-2-starter/    # Java 8+ & Spring Boot 2.7.x support
 ├── flowstep-spring-boot-3-starter/    # Java 17+ & Spring Boot 3.x support  
 ├── examples/

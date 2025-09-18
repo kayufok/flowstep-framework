@@ -1,5 +1,5 @@
 // FlowStep Spring Boot 2 Starter - Java 8+ Support
-description = 'FlowStep Spring Boot Starter for Spring Boot 2.7.x+ and Java 8+'
+description = 'FlowStep Spring Boot Starter for Spring Boot 2.7.x+ and Java 8+ - Clean CQRS framework implementing Template Method pattern for maintainable, step-based business logic execution'
 
 // Java configuration (will use system Java)
 java {

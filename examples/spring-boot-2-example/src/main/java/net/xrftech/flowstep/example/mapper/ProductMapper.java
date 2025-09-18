@@ -38,18 +38,16 @@ public interface ProductMapper {
     int deleteById(Long id);
     
     // Complex query for user's top products
-    @Select("""
-        SELECT p.id as productId, p.name as productName, 
-               COUNT(oi.order_id) as orderCount, 
-               SUM(oi.quantity * oi.unit_price) as totalSpent
-        FROM products p 
-        JOIN order_items oi ON p.id = oi.product_id 
-        JOIN orders o ON oi.order_id = o.id 
-        WHERE o.user_id = #{userId}
-        GROUP BY p.id, p.name 
-        ORDER BY totalSpent DESC 
-        LIMIT #{limit}
-        """)
+    @Select("SELECT p.id as productId, p.name as productName, " +
+            "COUNT(oi.order_id) as orderCount, " +
+            "SUM(oi.quantity * oi.unit_price) as totalSpent " +
+            "FROM products p " +
+            "JOIN order_items oi ON p.id = oi.product_id " +
+            "JOIN orders o ON oi.order_id = o.id " +
+            "WHERE o.user_id = #{userId} " +
+            "GROUP BY p.id, p.name " +
+            "ORDER BY totalSpent DESC " +
+            "LIMIT #{limit}")
     @Results({
         @Result(property = "productId", column = "productId"),
         @Result(property = "productName", column = "productName"),

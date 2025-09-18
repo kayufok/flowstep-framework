@@ -44,3 +44,28 @@ web-bundles/
 **/application-local.yml
 
 # /docs/ - Documentation is now tracked
+
+# Maven Central Publishing Artifacts
+maven-central-bundle/
+*.properties.central-portal
+*.properties.new
+*.properties.template
+
+# PowerShell Scripts (temporary)
+complete-bundle.ps1
+create-fresh-bundle.ps1
+fix-pom-validation.ps1
+generate-checksums.ps1
+generate-signatures.ps1
+regenerate-pom-checksums.ps1
+
+# GPG and Signing
+*.asc
+*.gpg
+secring.gpg
+
+# Checksums
+*.md5
+*.sha1
+*.sha256
+*.sha512
