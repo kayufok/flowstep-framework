@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowStep - Clean CQRS Spring Boot Starter</title>
+    <meta name="description" content="FlowStep is a Spring Boot starter implementing CQRS and Template Method patterns for maintainable, step-based business logic execution.">
+    <meta name="keywords" content="Spring Boot, CQRS, Java, Framework, Template Method, Maven Central">
+    <meta name="author" content="XRF Technology">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://flowstep.xrftech.net/">
+    <meta property="og:title" content="FlowStep - Clean CQRS Spring Boot Starter">
+    <meta property="og:description" content="FlowStep is a Spring Boot starter implementing CQRS and Template Method patterns for maintainable, step-based business logic execution.">
+    <meta property="og:image" content="https://flowstep.xrftech.net/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://flowstep.xrftech.net/">
+    <meta property="twitter:title" content="FlowStep - Clean CQRS Spring Boot Starter">
+    <meta property="twitter:description" content="FlowStep is a Spring Boot starter implementing CQRS and Template Method patterns for maintainable, step-based business logic execution.">
+    <meta property="twitter:image" content="https://flowstep.xrftech.net/assets/og-image.png">
+
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-stream brand-icon"></i>
+                <span class="brand-text">FlowStep</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#quickstart" class="nav-link">Quick Start</a>
+                <a href="#examples" class="nav-link">Examples</a>
+                <a href="#documentation" class="nav-link">Docs</a>
+                <a href="https://github.com/kayufok/flowstep-framework" class="nav-link github-link" target="_blank">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-rocket"></i>
+                    <span>Now Available on Maven Central</span>
+                </div>
+                <h1 class="hero-title">
+                    Clean <span class="gradient-text">CQRS</span> Spring Boot Starter
+                </h1>
+                <p class="hero-subtitle">
+                    FlowStep implements Template Method pattern for maintainable, step-based business logic execution. 
+                    Build enterprise-ready applications with clean architecture and testable code.
+                </p>
+                <div class="hero-actions">
+                    <a href="#quickstart" class="btn btn-primary">
+                        <i class="fas fa-play"></i>
+                        Get Started
+                    </a>
+                    <a href="https://github.com/kayufok/flowstep-framework" class="btn btn-secondary" target="_blank">
+                        <i class="fab fa-github"></i>
+                        View on GitHub
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">1.0.0</div>
+                        <div class="stat-label">Latest Version</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">2</div>
+                        <div class="stat-label">Spring Boot Versions</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">Java 8+</div>
+                        <div class="stat-label">Minimum Java</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="code-preview">
+                    <div class="code-header">
+                        <div class="code-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <span class="code-title">UserOrderSummaryQuery.java</span>
+                    </div>
+                    <pre><code class="language-java">@QueryFlow(code = "USER_ORDER_SUMMARY")
+@Service
+public class UserOrderSummaryQuery 
+    extends QueryTemplate&lt;Request, Response&gt; {
+
+    @Override
+    protected List&lt;QueryStep&lt;?&gt;&gt; steps(
+        Request request, QueryContext context) {
+        return Arrays.asList(
+            fetchUserStep,
+            fetchOrdersStep,
+            calculateStatsStep
+        );
+    }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why Choose FlowStep?</h2>
+                <p class="section-subtitle">
+                    Modern Spring Boot applications need clean architecture, testable code, and maintainable business logic.
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3 class="feature-title">CQRS Pattern</h3>
+                    <p class="feature-description">
+                        Clean separation between read (Query) and write (Command) operations for better scalability and maintainability.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <h3 class="feature-title">Template Method</h3>
+                    <p class="feature-description">
+                        Enforced 4-step execution flow prevents architectural drift and ensures consistent patterns across your application.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <h3 class="feature-title">Step-Based Design</h3>
+                    <p class="feature-description">
+                        Highly testable, modular components with context-based communication for complex business logic.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Type-Safe Error Handling</h3>
+                    <p class="feature-description">
+                        3-tier error classification (Validation, Business, System) with global exception handling.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Spring Boot Integration</h3>
+                    <p class="feature-description">
+                        Zero-configuration auto-setup with global exception handling and seamless Spring Boot integration.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <h3 class="feature-title">Multi-Version Support</h3>
+                    <p class="feature-description">
+                        Dual starters for Spring Boot 2.7.x+ (Java 8+) and 3.x+ (Java 17+) environments.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quickstart" class="quickstart">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Quick Start</h2>
+                <p class="section-subtitle">
+                    Get started with FlowStep in under 5 minutes. Choose your Spring Boot version and start building.
+                </p>
+            </div>
+            
+            <div class="version-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="spring-boot-2">Spring Boot 2.7+</button>
+                    <button class="tab-btn" data-tab="spring-boot-3">Spring Boot 3.x+</button>
+                </div>
+                
+                <div class="tab-content active" id="spring-boot-2">
+                    <div class="version-info">
+                        <div class="version-badge">
+                            <i class="fab fa-java"></i>
+                            <span>Java 8+ • Spring Boot 2.7.18+</span>
+                        </div>
+                    </div>
+                    <div class="dependency-tabs">
+                        <div class="dep-tab-buttons">
+                            <button class="dep-tab-btn active" data-dep="maven-2">Maven</button>
+                            <button class="dep-tab-btn" data-dep="gradle-2">Gradle</button>
+                        </div>
+                        <div class="dep-tab-content active" id="maven-2">
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">pom.xml</span>
+                                    <button class="copy-btn" data-copy="maven-2-code">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <pre><code id="maven-2-code" class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;net.xrftech&lt;/groupId&gt;
+    &lt;artifactId&gt;flowstep-spring-boot-2-starter&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+                            </div>
+                        </div>
+                        <div class="dep-tab-content" id="gradle-2">
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">build.gradle</span>
+                                    <button class="copy-btn" data-copy="gradle-2-code">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <pre><code id="gradle-2-code" class="language-gradle">implementation 'net.xrftech:flowstep-spring-boot-2-starter:1.0.0'</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="spring-boot-3">
+                    <div class="version-info">
+                        <div class="version-badge">
+                            <i class="fab fa-java"></i>
+                            <span>Java 17+ • Spring Boot 3.2.1+</span>
+                        </div>
+                    </div>
+                    <div class="dependency-tabs">
+                        <div class="dep-tab-buttons">
+                            <button class="dep-tab-btn active" data-dep="maven-3">Maven</button>
+                            <button class="dep-tab-btn" data-dep="gradle-3">Gradle</button>
+                        </div>
+                        <div class="dep-tab-content active" id="maven-3">
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">pom.xml</span>
+                                    <button class="copy-btn" data-copy="maven-3-code">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <pre><code id="maven-3-code" class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;net.xrftech&lt;/groupId&gt;
+    &lt;artifactId&gt;flowstep-spring-boot-3-starter&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+                            </div>
+                        </div>
+                        <div class="dep-tab-content" id="gradle-3">
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">build.gradle</span>
+                                    <button class="copy-btn" data-copy="gradle-3-code">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <pre><code id="gradle-3-code" class="language-gradle">implementation 'net.xrftech:flowstep-spring-boot-3-starter:1.0.0'</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Examples Section -->
+    <section id="examples" class="examples">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Code Examples</h2>
+                <p class="section-subtitle">
+                    See FlowStep in action with real-world examples of Query and Command implementations.
+                </p>
+            </div>
+            
+            <div class="example-tabs">
+                <div class="example-tab-buttons">
+                    <button class="example-tab-btn active" data-example="query">Query Example</button>
+                    <button class="example-tab-btn" data-example="command">Command Example</button>
+                </div>
+                
+                <div class="example-content active" id="query-example">
+                    <div class="example-description">
+                        <h3>User Order Summary Query</h3>
+                        <p>A read-only operation that fetches user details, orders, and calculates statistics using multiple steps.</p>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">UserOrderSummaryQuery.java</span>
+                            <button class="copy-btn" data-copy="query-example-code">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <pre><code id="query-example-code" class="language-java">@QueryFlow(code = "USER_ORDER_SUMMARY", desc = "Retrieve user order summary")
+@Service
+public class UserOrderSummaryQuery extends QueryTemplate&lt;UserOrderSummaryRequest, UserOrderSummaryResponse&gt; {
+
+    private final FetchUserStep fetchUserStep;
+    private final FetchUserOrdersStep fetchUserOrdersStep;
+    private final CalculateOrderStatisticsStep calculateOrderStatisticsStep;
+
+    @Override
+    protected StepResult&lt;Void&gt; validate(UserOrderSummaryRequest request) {
+        if (request.getUserId() == null || request.getUserId() &lt;= 0) {
+            return StepResult.failure("User ID must be positive", "VAL_001", ErrorType.VALIDATION);
+        }
+        return StepResult.success();
+    }
+
+    @Override
+    protected List&lt;QueryStep&lt;?&gt;&gt; steps(UserOrderSummaryRequest request, QueryContext context) {
+        return Arrays.asList(
+            fetchUserStep,              // Step 1: Fetch user info
+            fetchUserOrdersStep,        // Step 2: Fetch user orders
+            calculateOrderStatisticsStep // Step 3: Calculate statistics
+        );
+    }
+
+    @Override
+    protected UserOrderSummaryResponse buildResponse(QueryContext context) {
+        User user = context.get("user", User.class);
+        List&lt;Order&gt; userOrders = context.get("userOrders");
+        Map&lt;String, Object&gt; statistics = context.get("orderStatistics");
+        
+        return UserOrderSummaryResponse.builder()
+            .user(user)
+            .recentOrders(userOrders)
+            .totalSpent((BigDecimal) statistics.get("totalSpent"))
+            .totalOrderCount((Integer) statistics.get("totalOrderCount"))
+            .build();
+    }
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div class="example-content" id="command-example">
+                    <div class="example-description">
+                        <h3>Create Order Command</h3>
+                        <p>A transactional write operation that validates, creates an order, and publishes events using multiple steps.</p>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">CreateOrderCommandService.java</span>
+                            <button class="copy-btn" data-copy="command-example-code">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <pre><code id="command-example-code" class="language-java">@CommandFlow(code = "CREATE_ORDER", desc = "Process new customer order")
+@Service
+@Transactional  // Required for CommandTemplate operations
+public class CreateOrderCommandService extends CommandTemplate&lt;CreateOrderCommand, CreateOrderResponse&gt; {
+
+    private final ValidateUserStep validateUserStep;
+    private final ValidateProductsAndStockStep validateProductsAndStockStep;
+    private final CreateOrderStep createOrderStep;
+    private final CreateOrderItemsAndUpdateStockStep createOrderItemsAndUpdateStockStep;
+
+    @Override
+    protected StepResult&lt;Void&gt; validate(CreateOrderCommand command) {
+        if (command.getUserId() == null || command.getUserId() &lt;= 0) {
+            return StepResult.failure("User ID must be positive", "VAL_001", ErrorType.VALIDATION);
+        }
+        
+        if (command.getOrderItems() == null || command.getOrderItems().isEmpty()) {
+            return StepResult.failure("Order items are required", "VAL_002", ErrorType.VALIDATION);
+        }
+        
+        return StepResult.success();
+    }
+
+    @Override
+    protected List&lt;CommandStep&lt;?&gt;&gt; steps(CreateOrderCommand command, CommandContext context) {
+        return Arrays.asList(
+            validateUserStep,                    // Step 1: Validate user
+            validateProductsAndStockStep,        // Step 2: Validate products and stock
+            createOrderStep,                     // Step 3: Create order
+            createOrderItemsAndUpdateStockStep   // Step 4: Create order items and update stock
+        );
+    }
+
+    @Override
+    protected CreateOrderResponse buildResponse(CommandContext context) {
+        Order createdOrder = context.get("createdOrder", Order.class);
+        List&lt;OrderItem&gt; createdOrderItems = context.get("createdOrderItems");
+        
+        return CreateOrderResponse.builder()
+            .order(createdOrder)
+            .orderItems(createdOrderItems)
+            .message("Order created successfully with " + createdOrderItems.size() + " items")
+            .build();
+    }
+
+    @Override
+    protected void handlePostExecution(CommandContext context) {
+        // Publish domain events, send notifications, etc.
+        List&lt;Object&gt; events = context.getEvents();
+        log.info("Order creation completed with {} audit events", events.size());
+        super.handlePostExecution(context);
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="documentation" class="documentation">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Documentation & Resources</h2>
+                <p class="section-subtitle">
+                    Everything you need to master FlowStep and build enterprise-ready applications.
+                </p>
+            </div>
+            
+            <div class="docs-grid">
+                <a href="https://github.com/kayufok/flowstep-framework/blob/main/docs/API_REFERENCE.md" class="doc-card" target="_blank">
+                    <div class="doc-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3 class="doc-title">API Reference</h3>
+                    <p class="doc-description">Complete API documentation for all FlowStep classes, interfaces, and annotations.</p>
+                    <div class="doc-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/kayufok/flowstep-framework/blob/main/docs/ARCHITECTURE.md" class="doc-card" target="_blank">
+                    <div class="doc-icon">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <h3 class="doc-title">Architecture Guide</h3>
+                    <p class="doc-description">In-depth architecture documentation including design patterns and execution flows.</p>
+                    <div class="doc-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/kayufok/flowstep-framework/blob/main/docs/USAGE_GUIDE.md" class="doc-card" target="_blank">
+                    <div class="doc-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="doc-title">Usage Guide</h3>
+                    <p class="doc-description">Practical guide with examples for implementing queries, commands, and common patterns.</p>
+                    <div class="doc-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/kayufok/flowstep-framework/blob/main/docs/TESTING_GUIDE.md" class="doc-card" target="_blank">
+                    <div class="doc-icon">
+                        <i class="fas fa-vial"></i>
+                    </div>
+                    <h3 class="doc-title">Testing Guide</h3>
+                    <p class="doc-description">Comprehensive testing strategies, utilities, and best practices for FlowStep applications.</p>
+                    <div class="doc-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/kayufok/flowstep-framework/tree/main/examples" class="doc-card" target="_blank">
+                    <div class="doc-icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <h3 class="doc-title">Live Examples</h3>
+                    <p class="doc-description">Working examples for both Spring Boot 2.x and 3.x with comprehensive use cases.</p>
+                    <div class="doc-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+                
+                <a href="https://search.maven.org/artifact/net.xrftech/flowstep-spring-boot-2-starter" class="doc-card" target="_blank">
+                    <div class="doc-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <h3 class="doc-title">Maven Central</h3>
+                    <p class="doc-description">Official releases, version history, and dependency information on Maven Central.</p>
+                    <div class="doc-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <i class="fas fa-stream brand-icon"></i>
+                        <span class="brand-text">FlowStep</span>
+                    </div>
+                    <p class="brand-description">
+                        Clean CQRS Spring Boot Starter for enterprise applications.
+                    </p>
+                    <div class="social-links">
+                        <a href="https://github.com/kayufok/flowstep-framework" target="_blank" class="social-link">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="link-group">
+                        <h4 class="link-title">Framework</h4>
+                        <a href="#features" class="footer-link">Features</a>
+                        <a href="#quickstart" class="footer-link">Quick Start</a>
+                        <a href="#examples" class="footer-link">Examples</a>
+                    </div>
+                    
+                    <div class="link-group">
+                        <h4 class="link-title">Resources</h4>
+                        <a href="https://github.com/kayufok/flowstep-framework/blob/main/docs/README.md" target="_blank" class="footer-link">Documentation</a>
+                        <a href="https://github.com/kayufok/flowstep-framework" target="_blank" class="footer-link">GitHub</a>
+                        <a href="https://search.maven.org/search?q=g:net.xrftech%20AND%20a:flowstep*" target="_blank" class="footer-link">Maven Central</a>
+                    </div>
+                    
+                    <div class="link-group">
+                        <h4 class="link-title">Support</h4>
+                        <a href="https://github.com/kayufok/flowstep-framework/issues" target="_blank" class="footer-link">Issues</a>
+                        <a href="https://github.com/kayufok/flowstep-framework/discussions" target="_blank" class="footer-link">Discussions</a>
+                        <a href="https://github.com/kayufok/flowstep-framework/blob/main/CONTRIBUTING.md" target="_blank" class="footer-link">Contributing</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 XRF Technology. Licensed under MIT License.</p>
+                </div>
+                <div class="footer-version">
+                    <span class="version-badge">v1.0.0</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
