@@ -39,7 +39,15 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@QueryFlow(code = "USER_ORDER_SUMMARY", desc = "Retrieve comprehensive user order summary with statistics and top products")
+@QueryFlow(
+    code = "USER_ORDER_SUMMARY", 
+    desc = "Retrieve comprehensive user order summary with statistics and top products",
+    enableLogging = true,
+    logLevel = QueryFlow.LogLevel.INFO,
+    includeRequestResponse = true,
+    includePerformanceMetrics = true,
+    tags = {"user-service", "order-analytics", "business-critical"}
+)
 public class UserOrderSummaryQueryService extends QueryTemplate<UserOrderSummaryRequest, UserOrderSummaryResponse> {
     
     private final FetchUserStep fetchUserStep;

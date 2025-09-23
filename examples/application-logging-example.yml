@@ -1,0 +1,92 @@
+# FlowStep Logging Configuration Example
+# This file demonstrates how to configure comprehensive logging for QueryFlow and CommandFlow services
+
+flowstep:
+  enabled: true
+  
+  # Global logging configuration
+  logging:
+    # Enable FlowStep logging globally
+    enabled: true
+    
+    # Force logging even when service-level logging is disabled
+    # Useful for debugging or audit requirements
+    force-logging-enabled: false
+    
+    # Include stack traces in error logs
+    include-stack-traces: false
+    
+    # Maximum size of request/response data to log (in characters)
+    # Large payloads will be truncated to prevent log bloat
+    max-request-response-size: 10000
+    
+    # Additional patterns for sensitive field detection
+    # These patterns will be used to mask sensitive data in logs
+    sensitive-field-patterns:
+      - ".*api.*key.*"
+      - ".*client.*secret.*"
+      - ".*bearer.*token.*"
+      - ".*refresh.*token.*"
+    
+    # Default log level when not specified in annotation
+    default-log-level: "INFO"
+  
+  # Performance monitoring configuration
+  performance:
+    enabled: true
+    log-slow-queries: true
+    slow-query-threshold-ms: 2000
+    enable-metrics: true
+  
+  # Exception handler configuration
+  exception-handler:
+    enabled: true
+    include-stack-trace: false
+    include-debug-info: false
+
+# Spring Boot Logging Configuration
+logging:
+  level:
+    # Enable debug logging for FlowStep services
+    net.xrftech.flowstep.service: INFO
+    
+    # Enable trace logging for specific services (use service codes)
+    net.xrftech.flowstep.service.USER_ORDER_SUMMARY: DEBUG
+    net.xrftech.flowstep.service.CREATE_ORDER: INFO
+    
+    # Root logging level
+    root: INFO
+    
+  pattern:
+    # Custom log pattern with execution ID for tracing
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{executionId:-}] [%X{serviceCode:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{executionId:-}] [%X{serviceCode:-}] %logger{36} - %msg%n"
+  
+  file:
+    # Log file configuration
+    name: logs/flowstep-application.log
+    max-size: 100MB
+    max-history: 30
+    
+# Application-specific configuration
+server:
+  port: 8080
+
+spring:
+  application:
+    name: flowstep-logging-example
+  
+  # Database configuration (example)
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false # Let FlowStep handle query logging
+    properties:
+      hibernate:
+        format_sql: true

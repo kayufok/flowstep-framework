@@ -25,6 +25,11 @@ public class FlowStepProperties {
      * Performance monitoring configuration
      */
     private PerformanceConfig performance = new PerformanceConfig();
+    
+    /**
+     * Logging configuration
+     */
+    private LoggingConfig logging = new LoggingConfig();
 
     public boolean isEnabled() {
         return enabled;
@@ -48,6 +53,14 @@ public class FlowStepProperties {
 
     public void setPerformance(PerformanceConfig performance) {
         this.performance = performance;
+    }
+    
+    public LoggingConfig getLogging() {
+        return logging;
+    }
+    
+    public void setLogging(LoggingConfig logging) {
+        this.logging = logging;
     }
 
     /**
@@ -97,6 +110,53 @@ public class FlowStepProperties {
         public PerformanceConfig {
             if (slowQueryThresholdMs < 0) {
                 throw new IllegalArgumentException("Slow query threshold must be non-negative");
+            }
+        }
+    }
+    
+    /**
+     * Logging configuration record
+     * 
+     * @param enabled whether FlowStep logging is enabled globally
+     * @param forceLoggingEnabled whether to force logging even when service-level logging is disabled
+     * @param includeStackTraces whether to include stack traces in error logs
+     * @param maxRequestResponseSize maximum size of request/response data to log (in characters)
+     * @param sensitiveFieldPatterns additional patterns for sensitive field detection
+     * @param defaultLogLevel default log level when not specified in annotation
+     */
+    public record LoggingConfig(
+        boolean enabled,
+        boolean forceLoggingEnabled,
+        boolean includeStackTraces,
+        int maxRequestResponseSize,
+        String[] sensitiveFieldPatterns,
+        String defaultLogLevel
+    ) {
+        public LoggingConfig() {
+            this(false, false, false, 10000, new String[0], "INFO");
+        }
+        
+        public LoggingConfig {
+            if (maxRequestResponseSize < 0) {
+                throw new IllegalArgumentException("Max request/response size must be non-negative");
+            }
+            
+            if (defaultLogLevel == null || defaultLogLevel.trim().isEmpty()) {
+                throw new IllegalArgumentException("Default log level cannot be null or empty");
+            }
+            
+            // Validate log level
+            try {
+                valueOf(defaultLogLevel.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid default log level: " + defaultLogLevel);
+            }
+        }
+        
+        private void valueOf(String level) {
+            switch (level) {
+                case "TRACE", "DEBUG", "INFO", "WARN", "ERROR" -> {}
+                default -> throw new IllegalArgumentException("Invalid level");
             }
         }
     }
