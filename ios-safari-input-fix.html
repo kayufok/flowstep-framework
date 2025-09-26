@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iOS Safari Input Field Fix</title>
+    <style>
+        /* Critical: Font size must be at least 16px to prevent iOS zoom */
+        .ios-safe-input {
+            font-size: 16px !important;
+            line-height: 1.4;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: white;
+            /* Ensure input is not readonly */
+            -webkit-user-select: text;
+            user-select: text;
+            /* Prevent auto-zoom on focus */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        /* Dropdown container styling */
+        .dropdown-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .dropdown-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item.highlighted {
+            background-color: #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Container styling */
+        .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="instructions">
+            <h2>iOS Safari Input Field Fix</h2>
+            <p><strong>Issue:</strong> Input fields not triggering keyboard on iOS Safari mobile browser.</p>
+            <p><strong>Solution:</strong> This implementation ensures both dropdown functionality and keyboard popup work correctly on iOS Safari.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="country-input">Select Country (with dropdown + keyboard):</label>
+            <div class="dropdown-container">
+                <input 
+                    type="text" 
+                    id="country-input" 
+                    class="ios-safe-input"
+                    placeholder="Type or select a country..."
+                    autocomplete="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                />
+                <div class="dropdown-list" id="dropdown-list"></div>
+            </div>
+            <div class="status info" id="input-status">Ready - tap to test keyboard popup</div>
+        </div>
+
+        <div class="form-group">
+            <label for="phone-input">Phone Number:</label>
+            <input 
+                type="tel" 
+                id="phone-input" 
+                class="ios-safe-input"
+                placeholder="Enter phone number..."
+            />
+        </div>
+
+        <div class="form-group">
+            <label for="message-input">Message:</label>
+            <textarea 
+                id="message-input" 
+                class="ios-safe-input"
+                placeholder="Enter your message..."
+                rows="4"
+            ></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Country data for dropdown
+        const countries = [
+            { code: '+852', name: 'Hong Kong', flag: '🇭🇰' },
+            { code: '+691', name: 'Micronesia', flag: '🇫🇲' },
+            { code: '+692', name: 'Marshall Islands', flag: '🇲🇭' },
+            { code: '+850', name: 'North Korea', flag: '🇰🇵' },
+            { code: '+853', name: 'Macau', flag: '🇲🇴' },
+            { code: '+1', name: 'United States', flag: '🇺🇸' },
+            { code: '+44', name: 'United Kingdom', flag: '🇬🇧' },
+            { code: '+86', name: 'China', flag: '🇨🇳' },
+            { code: '+81', name: 'Japan', flag: '🇯🇵' },
+            { code: '+82', name: 'South Korea', flag: '🇰🇷' }
+        ];
+
+        class IOSSafeDropdown {
+            constructor(inputElement, dropdownElement, data) {
+                this.input = inputElement;
+                this.dropdown = dropdownElement;
+                this.data = data;
+                this.isOpen = false;
+                this.selectedIndex = -1;
+                this.statusElement = document.getElementById('input-status');
+                
+                this.init();
+            }
+
+            init() {
+                // Critical: Use direct event listeners, not delegated ones
+                this.input.addEventListener('input', (e) => this.handleInput(e));
+                this.input.addEventListener('focus', (e) => this.handleFocus(e));
+                this.input.addEventListener('blur', (e) => this.handleBlur(e));
+                this.input.addEventListener('keydown', (e) => this.handleKeydown(e));
+                
+                // Handle clicks on dropdown items
+                this.dropdown.addEventListener('mousedown', (e) => {
+                    // Prevent blur event when clicking dropdown items
+                    e.preventDefault();
+                });
+                
+                this.dropdown.addEventListener('click', (e) => this.handleDropdownClick(e));
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!this.input.contains(e.target) && !this.dropdown.contains(e.target)) {
+                        this.closeDropdown();
+                    }
+                });
+            }
+
+            handleInput(e) {
+                const value = e.target.value.toLowerCase();
+                const filteredData = this.data.filter(item => 
+                    item.name.toLowerCase().includes(value) || 
+                    item.code.includes(value)
+                );
+                
+                this.renderDropdown(filteredData);
+                this.openDropdown();
+                this.selectedIndex = -1;
+                
+                this.updateStatus(`Typing: "${e.target.value}" - Keyboard should be visible`);
+            }
+
+            handleFocus(e) {
+                // Critical: This must be a direct result of user action
+                this.updateStatus('Input focused - Keyboard should appear now');
+                
+                // Show all options when focusing empty input
+                if (!e.target.value.trim()) {
+                    this.renderDropdown(this.data);
+                    this.openDropdown();
+                }
+                
+                // Ensure the input is not readonly and can receive input
+                e.target.removeAttribute('readonly');
+                
+                // Force focus if needed (only works from direct user action)
+                if (document.activeElement !== e.target) {
+                    // Only call focus if this is from a user interaction
+                    setTimeout(() => {
+                        if (e.isTrusted) { // Ensure this is a real user event
+                            e.target.focus();
+                        }
+                    }, 0);
+                }
+            }
+
+            handleBlur(e) {
+                // Delay closing to allow for dropdown clicks
+                setTimeout(() => {
+                    this.closeDropdown();
+                    this.updateStatus('Input blurred - Ready for next interaction');
+                }, 150);
+            }
+
+            handleKeydown(e) {
+                if (!this.isOpen) return;
+
+                const items = this.dropdown.querySelectorAll('.dropdown-item');
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
+                        this.highlightItem();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                        this.highlightItem();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (this.selectedIndex >= 0) {
+                            this.selectItem(items[this.selectedIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        this.closeDropdown();
+                        break;
+                }
+            }
+
+            handleDropdownClick(e) {
+                const item = e.target.closest('.dropdown-item');
+                if (item) {
+                    this.selectItem(item);
+                }
+            }
+
+            selectItem(item) {
+                const code = item.dataset.code;
+                const name = item.dataset.name;
+                this.input.value = `${code} ${name}`;
+                this.closeDropdown();
+                this.updateStatus(`Selected: ${code} ${name}`);
+                
+                // Keep focus on input to maintain keyboard
+                this.input.focus();
+            }
+
+            renderDropdown(data) {
+                this.dropdown.innerHTML = data.map((item, index) => 
+                    `<div class="dropdown-item" data-code="${item.code}" data-name="${item.name}">
+                        ${item.flag} ${item.code} ${item.name}
+                    </div>`
+                ).join('');
+            }
+
+            openDropdown() {
+                this.dropdown.style.display = 'block';
+                this.isOpen = true;
+            }
+
+            closeDropdown() {
+                this.dropdown.style.display = 'none';
+                this.isOpen = false;
+                this.selectedIndex = -1;
+            }
+
+            highlightItem() {
+                const items = this.dropdown.querySelectorAll('.dropdown-item');
+                items.forEach((item, index) => {
+                    item.classList.toggle('highlighted', index === this.selectedIndex);
+                });
+            }
+
+            updateStatus(message) {
+                if (this.statusElement) {
+                    this.statusElement.textContent = message;
+                    this.statusElement.className = 'status info';
+                }
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const countryInput = document.getElementById('country-input');
+            const dropdownList = document.getElementById('dropdown-list');
+            
+            // Initialize the iOS-safe dropdown
+            const dropdown = new IOSSafeDropdown(countryInput, dropdownList, countries);
+            
+            // Add event listeners to other inputs for testing
+            const phoneInput = document.getElementById('phone-input');
+            const messageInput = document.getElementById('message-input');
+            
+            [phoneInput, messageInput].forEach(input => {
+                input.addEventListener('focus', function() {
+                    console.log(`${this.id} focused - keyboard should appear`);
+                });
+                
+                input.addEventListener('input', function() {
+                    console.log(`${this.id} input: ${this.value}`);
+                });
+            });
+        });
+
+        // iOS Safari specific fixes
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            console.log('iOS device detected - applying iOS-specific fixes');
+            
+            // Prevent zoom on input focus
+            document.addEventListener('touchstart', function() {}, { passive: true });
+            
+            // Additional iOS Safari fixes
+            window.addEventListener('orientationchange', function() {
+                // Prevent issues when rotating device
+                setTimeout(function() {
+                    window.scrollTo(0, 0);
+                }, 500);
+            });
+        }
+    </script>
+</body>
+</html>
