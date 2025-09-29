@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class CreateOrderItemsAndUpdateStockStep implements CommandStep<List<Orde
     @SuppressWarnings("unchecked")
     public StepResult<List<OrderItem>> execute(CommandContext context) throws Exception {
         try {
-            Order createdOrder = context.get("createdOrder", Order.class);
+            Order createdOrder = context.get("createdOrder");
             Map<String, Object> productValidation = (Map<String, Object>) context.get("productValidation");
             List<CreateOrderCommand.OrderItem> orderItems = 
                 (List<CreateOrderCommand.OrderItem>) productValidation.get("orderItems");
@@ -78,18 +79,22 @@ public class CreateOrderItemsAndUpdateStockStep implements CommandStep<List<Orde
             
             // Add audit events
             for (OrderItem item : createdOrderItems) {
-                context.addEvent("ORDER_ITEM_CREATED", Map.of(
-                    "orderItemId", item.getId(),
-                    "orderId", item.getOrderId(),
-                    "productId", item.getProductId(),
-                    "quantity", item.getQuantity()
-                ));
+                Map<String, Object> orderItemEvent = new HashMap<>();
+                orderItemEvent.put("type", "ORDER_ITEM_CREATED");
+                orderItemEvent.put(
+                    "orderItemId", item.getId());
+                orderItemEvent.put("orderId", item.getOrderId());
+                orderItemEvent.put("productId", item.getProductId());
+                orderItemEvent.put("quantity", item.getQuantity());
+                context.addEvent(orderItemEvent);
                 
-                context.addEvent("STOCK_UPDATED", Map.of(
-                    "productId", item.getProductId(),
-                    "quantityDecrease", item.getQuantity(),
-                    "orderId", item.getOrderId()
-                ));
+                Map<String, Object> stockEvent = new HashMap<>();
+                stockEvent.put("type", "STOCK_UPDATED");
+                stockEvent.put(
+                    "productId", item.getProductId());
+                stockEvent.put("quantityDecrease", item.getQuantity());
+                stockEvent.put("orderId", item.getOrderId());
+                context.addEvent(stockEvent);
             }
             
             log.debug("Successfully created {} order items and updated stock for order {}", 

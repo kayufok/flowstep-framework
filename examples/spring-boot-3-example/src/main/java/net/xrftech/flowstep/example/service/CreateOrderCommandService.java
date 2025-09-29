@@ -90,7 +90,7 @@ public class CreateOrderCommandService extends CommandTemplate<CreateOrderComman
     @SuppressWarnings("unchecked")
     protected CreateOrderResponse buildResponse(CommandContext context) {
         // Extract data from context that was populated by the steps
-        Order createdOrder = context.get("createdOrder", Order.class);
+        Order createdOrder = context.get("createdOrder");
         List<OrderItem> createdOrderItems = (List<OrderItem>) context.get("createdOrderItems");
         
         // Build and return the response

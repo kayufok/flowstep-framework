@@ -34,7 +34,7 @@ public class CreateOrderItemsAndUpdateStockStep implements CommandStep<List<Orde
     @SuppressWarnings("unchecked")
     public StepResult<List<OrderItem>> execute(CommandContext context) throws Exception {
         try {
-            Order createdOrder = context.get("createdOrder", Order.class);
+            Order createdOrder = context.get("createdOrder");
             Map<String, Object> productValidation = (Map<String, Object>) context.get("productValidation");
             List<CreateOrderCommand.OrderItem> orderItems = 
                 (List<CreateOrderCommand.OrderItem>) productValidation.get("orderItems");
@@ -78,14 +78,16 @@ public class CreateOrderItemsAndUpdateStockStep implements CommandStep<List<Orde
             
             // Add audit events
             for (OrderItem item : createdOrderItems) {
-                context.addEvent("ORDER_ITEM_CREATED", Map.of(
+                context.addEvent(Map.of(
+                    "type", "ORDER_ITEM_CREATED",
                     "orderItemId", item.getId(),
                     "orderId", item.getOrderId(),
                     "productId", item.getProductId(),
                     "quantity", item.getQuantity()
                 ));
                 
-                context.addEvent("STOCK_UPDATED", Map.of(
+                context.addEvent(Map.of(
+                    "type", "STOCK_UPDATED",
                     "productId", item.getProductId(),
                     "quantityDecrease", item.getQuantity(),
                     "orderId", item.getOrderId()

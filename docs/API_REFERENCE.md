@@ -127,10 +127,11 @@ Validates the command. Default implementation returns success.
 
 Initializes context with additional information (user, permissions, etc).
 
-##### `steps(C command, CommandContext context) : List<CommandStep<?>>`
+##### `steps(C command, CommandContext context) : List<?>`
 *Protected, Abstract*
 
 Defines the sequence of steps to execute for this command.
+The returned list can contain both CommandStep and QueryStep instances.
 
 ##### `buildResponse(CommandContext context) : R`
 *Protected, Abstract*

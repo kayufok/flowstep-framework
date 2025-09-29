@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,7 +32,7 @@ public class CreateOrderStep implements CommandStep<Order> {
     public StepResult<Order> execute(CommandContext context) throws Exception {
         try {
             CreateOrderCommand command = context.getCommand();
-            User validatedUser = context.get("validatedUser", User.class);
+            User validatedUser = context.get("validatedUser");
             Map<String, Object> productValidation = (Map<String, Object>) context.get("productValidation");
             BigDecimal totalAmount = (BigDecimal) productValidation.get("totalAmount");
             
@@ -53,11 +54,13 @@ public class CreateOrderStep implements CommandStep<Order> {
             context.put("createdOrder", savedOrder);
             
             // Add audit event
-            context.addEvent("ORDER_CREATED", Map.of(
-                "orderId", savedOrder.getId(),
-                "userId", validatedUser.getId(),
-                "totalAmount", totalAmount
-            ));
+            Map<String, Object> orderEvent = new HashMap<>();
+            orderEvent.put("type", "ORDER_CREATED");
+            orderEvent.put(
+                "orderId", savedOrder.getId());
+            orderEvent.put("userId", validatedUser.getId());
+            orderEvent.put("totalAmount", totalAmount);
+            context.addEvent(orderEvent);
             
             log.debug("Successfully created order with ID: {}", savedOrder.getId());
             

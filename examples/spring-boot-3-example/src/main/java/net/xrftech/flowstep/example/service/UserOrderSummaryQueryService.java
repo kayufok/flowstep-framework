@@ -82,7 +82,7 @@ public class UserOrderSummaryQueryService extends QueryTemplate<UserOrderSummary
     @SuppressWarnings("unchecked")
     protected UserOrderSummaryResponse buildResponse(QueryContext context) {
         // Extract data from context that was populated by the steps
-        User user = context.get("user", User.class);
+        User user = context.get("user");
         List<Order> userOrders = (List<Order>) context.get("userOrders");
         Map<String, Object> statistics = (Map<String, Object>) context.get("orderStatistics");
         List<ProductSummary> topProducts = (List<ProductSummary>) context.get("topProducts");

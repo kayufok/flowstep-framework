@@ -31,7 +31,7 @@ public class CreateOrderStep implements CommandStep<Order> {
     public StepResult<Order> execute(CommandContext context) throws Exception {
         try {
             CreateOrderCommand command = context.getCommand();
-            User validatedUser = context.get("validatedUser", User.class);
+            User validatedUser = context.get("validatedUser");
             Map<String, Object> productValidation = (Map<String, Object>) context.get("productValidation");
             BigDecimal totalAmount = (BigDecimal) productValidation.get("totalAmount");
             
@@ -53,7 +53,8 @@ public class CreateOrderStep implements CommandStep<Order> {
             context.put("createdOrder", savedOrder);
             
             // Add audit event
-            context.addEvent("ORDER_CREATED", Map.of(
+            context.addEvent(Map.of(
+                "type", "ORDER_CREATED",
                 "orderId", savedOrder.getId(),
                 "userId", validatedUser.getId(),
                 "totalAmount", totalAmount

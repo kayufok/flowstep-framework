@@ -1,9 +1,11 @@
 package net.xrftech.flowstep;
 
 import net.xrftech.flowstep.context.CommandContext;
+import net.xrftech.flowstep.context.QueryContext;
 import net.xrftech.flowstep.exception.BusinessException;
 import net.xrftech.flowstep.exception.ErrorType;
 import net.xrftech.flowstep.step.CommandStep;
+import net.xrftech.flowstep.step.QueryStep;
 import net.xrftech.flowstep.step.StepResult;
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,8 +80,24 @@ public abstract class CommandTemplate<C, R> {
                 var step = stepList.get(i);
                 log.debug("Executing command step {}: {}", i + 1, step.getClass().getSimpleName());
                 
-                @SuppressWarnings("unchecked")
-                var stepResult = ((CommandStep<Object>) step).execute(context);
+                StepResult<Object> stepResult;
+                
+                // Handle both CommandStep and QueryStep
+                if (step instanceof CommandStep) {
+                    @SuppressWarnings("unchecked")
+                    var commandStep = (CommandStep<Object>) step;
+                    stepResult = commandStep.execute(context);
+                } else if (step instanceof QueryStep) {
+                    // Create a QueryContext adapter that delegates to CommandContext
+                    var queryContext = createQueryContextAdapter(context);
+                    @SuppressWarnings("unchecked")
+                    var queryStep = (QueryStep<Object>) step;
+                    stepResult = queryStep.execute(queryContext);
+                } else {
+                    throw new IllegalArgumentException(
+                        "Step must be either CommandStep or QueryStep: " + step.getClass().getName()
+                    );
+                }
                 
                 if (!stepResult.isSuccess()) {
                     log.warn("Command step {} failed: {}", i + 1, stepResult.getMessage());
@@ -150,11 +168,14 @@ public abstract class CommandTemplate<C, R> {
      * Steps are executed in the order they appear in the returned list.
      * All steps participate in the same transaction.
      * 
+     * The returned list can contain both CommandStep and QueryStep instances.
+     * QueryStep instances are useful for read-only operations within the command flow.
+     * 
      * @param command the command to execute
      * @param context the command context (already contains the command)
-     * @return ordered list of steps to execute
+     * @return ordered list of steps to execute (can be CommandStep or QueryStep)
      */
-    protected abstract List<CommandStep<?>> steps(C command, CommandContext context);
+    protected abstract List<?> steps(C command, CommandContext context);
     
     /**
      * Builds the command response from the context.
@@ -191,5 +212,80 @@ public abstract class CommandTemplate<C, R> {
         if (log.isDebugEnabled()) {
             log.debug("Command audit info: {}", context.getAuditInfo());
         }
+    }
+    
+    /**
+     * Creates a QueryContext adapter that delegates to the CommandContext.
+     * This allows QueryStep instances to be used within command flows.
+     * 
+     * @param commandContext the command context to adapt
+     * @return a QueryContext that shares the same storage as the command context
+     */
+    private QueryContext createQueryContextAdapter(final CommandContext commandContext) {
+        return new QueryContext() {
+            @Override
+            public <T> void put(String key, T value) {
+                commandContext.put(key, value);
+            }
+            
+            @Override
+            public <T> T get(String key) {
+                return commandContext.get(key);
+            }
+            
+            @Override
+            public boolean has(String key) {
+                return commandContext.has(key);
+            }
+            
+            @Override
+            public <T> T getOrDefault(String key, T defaultValue) {
+                return commandContext.getOrDefault(key, defaultValue);
+            }
+            
+            @Override
+            public <T> T remove(String key) {
+                return commandContext.remove(key);
+            }
+            
+            @Override
+            public void clear() {
+                commandContext.clear();
+            }
+            
+            @Override
+            public int size() {
+                return commandContext.size();
+            }
+            
+            @Override
+            public boolean isEmpty() {
+                return commandContext.isEmpty();
+            }
+            
+            @Override
+            public <T> T getRequest() {
+                // In command context, we return the command as the "request"
+                return commandContext.getCommand();
+            }
+            
+            @Override
+            public <T> void setRequest(T request) {
+                // This shouldn't be called in command context
+                throw new UnsupportedOperationException(
+                    "Cannot set request in command context adapter"
+                );
+            }
+            
+            @Override
+            public void markStartTime() {
+                commandContext.markStartTime();
+            }
+            
+            @Override
+            public long getExecutionDuration() {
+                return commandContext.getExecutionDuration();
+            }
+        };
     }
 }

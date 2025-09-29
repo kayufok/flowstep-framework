@@ -202,7 +202,7 @@ public class CreateProductService extends CommandTemplate<CreateProductCommand, 
     }
     
     @Override
-    protected List<CommandStep<?>> steps(CreateProductCommand command, CommandContext context) {
+    protected List<?> steps(CreateProductCommand command, CommandContext context) {
         return List.of(
             // Step 1: Check for duplicate names
             () -> {
@@ -298,8 +298,8 @@ public class ProductController {
 
 ```java
 @Override
-protected List<CommandStep<?>> steps(OrderCommand command, CommandContext context) {
-    List<CommandStep<?>> steps = new ArrayList<>();
+protected List<?> steps(OrderCommand command, CommandContext context) {
+    List<Object> steps = new ArrayList<>();
     
     // Always validate inventory
     steps.add(this::validateInventory);
@@ -340,6 +340,59 @@ private StepResult<Void> applyDiscount(CommandContext context) {
     return StepResult.success();
 }
 ```
+
+### Using QueryStep in CommandFlow
+
+```java
+@CommandFlow(code = "PROCESS_ORDER", desc = "Process order with mixed steps")
+@Service
+@Transactional
+public class ProcessOrderCommand extends CommandTemplate<OrderRequest, OrderResponse> {
+    
+    @Autowired
+    private FetchUserStep fetchUserStep; // This is a QueryStep
+    
+    @Autowired
+    private ValidateInventoryStep validateInventoryStep; // This is a QueryStep
+    
+    @Autowired
+    private CreateOrderStep createOrderStep; // This is a CommandStep
+    
+    @Override
+    protected List<?> steps(OrderRequest request, CommandContext context) {
+        return List.of(
+            // QueryStep - read-only operation to fetch user
+            fetchUserStep,
+            
+            // QueryStep - read-only validation
+            validateInventoryStep,
+            
+            // CommandStep - write operation
+            createOrderStep,
+            
+            // Lambda QueryStep - inline read operation
+            (QueryStep<?>) (queryContext) -> {
+                User user = queryContext.get("user");
+                List<Order> previousOrders = orderRepository.findByUserId(user.getId());
+                queryContext.put("previousOrders", previousOrders);
+                return StepResult.success(previousOrders);
+            },
+            
+            // Lambda CommandStep - inline write operation
+            (CommandStep<?>) (commandContext) -> {
+                Order order = commandContext.get("order");
+                notificationService.sendOrderConfirmation(order);
+                return StepResult.success();
+            }
+        );
+    }
+}
+```
+
+**Benefits of mixing QueryStep and CommandStep:**
+- Reuse existing QueryStep components in command flows
+- Clear separation between read and write operations
+- Better code organization and reusability
 
 ### Parallel Step Execution (Advanced)
 
@@ -443,7 +496,7 @@ private StepResult<PaymentResult> processPayment(CommandContext context) {
 public class ProcessOrderCommand extends CommandTemplate<OrderRequest, OrderResponse> {
     
     @Override
-    protected List<CommandStep<?>> steps(OrderRequest request, CommandContext context) {
+    protected List<?> steps(OrderRequest request, CommandContext context) {
         return List.of(
             this::validateCustomer,
             this::validateProducts,
@@ -589,7 +642,7 @@ public class RegisterUserCommand extends CommandTemplate<RegistrationRequest, Re
     }
     
     @Override
-    protected List<CommandStep<?>> steps(RegistrationRequest request, CommandContext context) {
+    protected List<?> steps(RegistrationRequest request, CommandContext context) {
         return List.of(
             // Check if email already exists
             () -> {
@@ -756,7 +809,7 @@ public class ListProductsQuery extends QueryTemplate<PageRequest, PageResponse<P
 public class BulkUpdateProductsCommand extends CommandTemplate<BulkUpdateRequest, BulkUpdateResponse> {
     
     @Override
-    protected List<CommandStep<?>> steps(BulkUpdateRequest request, CommandContext context) {
+    protected List<?> steps(BulkUpdateRequest request, CommandContext context) {
         return List.of(
             // Validate all products exist
             () -> {
