@@ -478,14 +478,28 @@ class ArchitectureTest {
 
 ## 📚 Documentation
 
-For detailed documentation, please see:
+### Documentation Structure
 
-- **[Complete Documentation Index](docs/README.md)** - Central hub for all documentation
-- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
-- **[Architecture Guide](docs/ARCHITECTURE.md)** - Design patterns and system architecture
-- **[Usage Guide](docs/USAGE_GUIDE.md)** - Practical examples and patterns
-- **[Testing Guide](docs/TESTING_GUIDE.md)** - Testing strategies and best practices
-- **[Configuration Reference](docs/CONFIGURATION_REFERENCE.md)** - All configuration options
+The FlowStep framework provides comprehensive documentation organized into the following guides:
+
+| Document | Purpose | Best For |
+|----------|---------|----------|
+| **[Documentation Index](docs/README.md)** | Central hub and navigation | Finding specific topics quickly |
+| **[API Reference](docs/API_REFERENCE.md)** | Complete API documentation | Understanding classes and methods |
+| **[Architecture Guide](docs/ARCHITECTURE.md)** | Design patterns and principles | Grasping framework design |
+| **[Usage Guide](docs/USAGE_GUIDE.md)** | Practical examples and patterns | Learning by example |
+| **[Testing Guide](docs/TESTING_GUIDE.md)** | Testing strategies and best practices | Writing quality tests |
+| **[Configuration Reference](docs/CONFIGURATION_REFERENCE.md)** | All configuration options | Customizing framework behavior |
+| **[Migration Guide](docs/MIGRATION_GUIDE.md)** | Migrating existing apps | Adopting FlowStep in existing projects |
+| **[Library Development Guide](docs/library-development-guide.md)** | Publishing and maintenance | Contributing to FlowStep |
+
+### Quick Start Paths
+
+- **New to FlowStep?** Start with [Documentation Index](docs/README.md) → [Usage Guide](docs/USAGE_GUIDE.md)
+- **Migrating existing app?** Go to [Migration Guide](docs/MIGRATION_GUIDE.md)
+- **Need API details?** Check [API Reference](docs/API_REFERENCE.md)
+- **Writing tests?** See [Testing Guide](docs/TESTING_GUIDE.md)
+- **Configuring framework?** Review [Configuration Reference](docs/CONFIGURATION_REFERENCE.md)
 
 ## 🤝 Contributing
 
@@ -533,20 +547,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ```
 flowstep-framework/
-├── flowstep-spring-boot-2-starter/    # Java 8+ & Spring Boot 2.7.x support
-├── flowstep-spring-boot-3-starter/    # Java 17+ & Spring Boot 3.x support  
-├── docs/                              # Complete documentation
-│   ├── API_REFERENCE.md
-│   ├── ARCHITECTURE.md
-│   ├── USAGE_GUIDE.md
-│   ├── TESTING_GUIDE.md
-│   └── CONFIGURATION_REFERENCE.md
-└── summaries/                         # Development summaries
+├── flowstep-spring-boot-2-starter/        # Java 8+ & Spring Boot 2.7.x support
+├── flowstep-spring-boot-3-starter/        # Java 17+ & Spring Boot 3.x support  
+├── docs/                                  # Complete documentation
+│   ├── README.md                          # Documentation index
+│   ├── API_REFERENCE.md                   # Complete API reference
+│   ├── ARCHITECTURE.md                    # Architecture and design patterns
+│   ├── USAGE_GUIDE.md                     # Practical usage examples
+│   ├── TESTING_GUIDE.md                   # Testing strategies
+│   ├── CONFIGURATION_REFERENCE.md         # Configuration options
+│   ├── MIGRATION_GUIDE.md                 # Migration instructions
+│   └── library-development-guide.md       # Library publishing guide
+├── CONTRIBUTING.md                        # Contribution guidelines
+├── LICENSE                                # MIT License
+└── README.md                              # This file
 ```
-
-## 🔗 Related Projects
-
-- **Documentation**: Complete documentation available in `/docs`
 
 ---
 

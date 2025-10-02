@@ -17,6 +17,8 @@ FlowStep is a Spring Boot starter that implements the **Template Method** and **
 | [Usage Guide](./USAGE_GUIDE.md) | Practical guide with examples for implementing queries, commands, and common patterns |
 | [Testing Guide](./TESTING_GUIDE.md) | Comprehensive testing strategies, utilities, and best practices for FlowStep applications |
 | [Configuration Reference](./CONFIGURATION_REFERENCE.md) | Complete configuration options, properties, and customization guide |
+| [Migration Guide](./MIGRATION_GUIDE.md) | Step-by-step guide for migrating existing applications to FlowStep |
+| [Library Development Guide](./library-development-guide.md) | Guide for maintaining and publishing FlowStep library |
 
 ### Quick Links
 
@@ -183,10 +185,12 @@ Our documentation covers:
 | Understand the architecture | [Architecture Guide](./ARCHITECTURE.md) |
 | Implement a query service | [Usage Guide - Basic Query](./USAGE_GUIDE.md#basic-query-implementation) |
 | Implement a command service | [Usage Guide - Basic Command](./USAGE_GUIDE.md#basic-command-implementation) |
+| Migrate existing application | [Migration Guide](./MIGRATION_GUIDE.md) |
 | Write tests for my services | [Testing Guide](./TESTING_GUIDE.md) |
 | Configure FlowStep properties | [Configuration Reference](./CONFIGURATION_REFERENCE.md) |
 | Understand error handling | [API Reference - Exception Classes](./API_REFERENCE.md#exception-classes) |
 | Use advanced patterns | [Usage Guide - Advanced Patterns](./USAGE_GUIDE.md#advanced-patterns) |
+| Publish FlowStep library | [Library Development Guide](./library-development-guide.md) |
 
 ### By Component
 
@@ -267,4 +271,6 @@ Planned features:
 
 **Thank you for choosing FlowStep!** We hope this documentation helps you build robust, maintainable Spring Boot applications.
 
-For the latest updates and examples, visit our [GitHub repository](https://github.com/kayufok/flowstep-spring-boot-starter).
+For the latest updates, examples, and community discussions, visit our [GitHub repository](https://github.com/kayufok/flowstep-framework).
+
+*Made with ❤️ for Spring Boot developers*
