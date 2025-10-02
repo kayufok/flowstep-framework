@@ -497,16 +497,12 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 git clone https://github.com/kayufok/flowstep-framework.git
 cd flowstep-framework
 
-# Build all modules (parent + 2 starters + 2 examples)
+# Build all modules (parent + 2 starters)
 ./gradlew build
 
 # Test specific modules
 ./gradlew :flowstep-spring-boot-2-starter:test
 ./gradlew :flowstep-spring-boot-3-starter:test
-
-# Test examples
-./gradlew :examples:spring-boot-2-example:test
-./gradlew :examples:spring-boot-3-example:test
 
 # Run with architecture tests (optional)
 ./gradlew test -PenableArchUnit=true
@@ -539,9 +535,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 flowstep-framework/
 ├── flowstep-spring-boot-2-starter/    # Java 8+ & Spring Boot 2.7.x support
 ├── flowstep-spring-boot-3-starter/    # Java 17+ & Spring Boot 3.x support  
-├── examples/
-│   ├── spring-boot-2-example/         # Comprehensive example for Boot 2.x
-│   └── spring-boot-3-example/         # Comprehensive example for Boot 3.x
 ├── docs/                              # Complete documentation
 │   ├── API_REFERENCE.md
 │   ├── ARCHITECTURE.md
@@ -553,7 +546,6 @@ flowstep-framework/
 
 ## 🔗 Related Projects
 
-- **Examples**: Included in this repository under `/examples`
 - **Documentation**: Complete documentation available in `/docs`
 
 ---
